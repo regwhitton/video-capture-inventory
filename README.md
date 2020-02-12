@@ -52,5 +52,5 @@ Currently Video Capture Inventory:
 
 ## Example Maven Projects
 
-* [Simple](./example/simple) - list the devices and frame size to the console.
-* [OpenCV](./example/opencv) - use OpenCV to grab an image from every device, at every frame size.
+* [Simple](./examples/simple) - list the devices and frame size to the console.
+* [OpenCV](./examples/opencv) - use OpenCV to grab an image from every device, at every frame size.

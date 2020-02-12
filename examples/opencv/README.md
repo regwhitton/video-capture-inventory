@@ -1,5 +1,5 @@
 # OpenCV Example
-`
+
 Test Application that uses Video Capture Inventory with OpenCV (via JavaCPP).
 
 Grabs a frame from every camera at every resolution and writes it to `target`.
