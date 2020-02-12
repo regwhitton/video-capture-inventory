@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.regwhitton</groupId>
+    <artifactId>video-capture-inventory-modules</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <!--
+        In build environments, profiles will only be activated from the
+        command line using -P option.  Java-API should be built first, as it
+        also creates the C++ headers files for the native shared libraries.
+        Separate builds should then happen for the native shared libraries.
+
+        For development (with no profiles on the command line), maven will build:
+        * the Java-API,
+        * the natives for the current machine (if available),
+        * the simple example that lists the local devices.
+    -->
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>java-api</module>
+                <module>native-impl</module>
+                <module>examples/simple</module>
+                <module>examples/opencv</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>java-api</id>
+            <modules>
+                <module>java-api</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>windows</id>
+            <modules>
+                <module>native-impl</module>
+                <module>examples/simple</module>
+            </modules>
+        </profile>
+    </profiles>
+
+</project>

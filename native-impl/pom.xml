@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.regwhitton</groupId>
+    <artifactId>video-capture-inventory</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--
+        During a release build this maven project expects to be used with a profile
+        that indicates which native shared libraries to build.
+        It creates a jar with a classifier for each.
+        During development where no profile is given, it builds for the local OS.
+    -->
+    <properties>
+        <!--
+            JAVA_HOME points to JDK on target build machine:
+                https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
+            However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
+            to Unix style but g++ doesn't understand it.
+            So we setup jdk.home to points to JDK by assuming it is folder above JRE.
+        -->
+        <jdk.home>${java.home}/..</jdk.home>
+
+        <includes>${project.build.directory}/includes</includes>
+        <natives>${project.build.directory}/natives</natives>
+        <antrun.plugin.version>1.8</antrun.plugin.version>
+        <jar.plugin.version>3.2.0</jar.plugin.version>
+        <dependency.plugin.version>3.1.1</dependency.plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.regwhitton</groupId>
+            <artifactId>video-capture-inventory-java-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <!--
+                Windows: expect MinGW g++ to be available on the PATH.
+                https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
+            -->
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>${antrun.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${natives}" />
+                                        <exec executable="g++" failonerror="true">
+                                            <arg value="-m64" />
+                                            <arg value="-shared" />
+                                            <arg value="-I${jdk.home}/include" />
+                                            <arg value="-I${jdk.home}/include/win32" />
+                                            <arg value="-I${includes}" />
+                                            <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
+                                            <arg value="-o${natives}/VideoCaptureInventoryWin64.dll" />
+                                            <arg value="-Wl,--add-stdcall-alias" />
+                                            <arg value="-lole32" />
+                                            <arg value="-loleaut32" />
+                                        </exec>
+                                    </target>
+                                    <!--
+                                    <target>
+                                        <mkdir dir="${natives}" />
+                                        <exec executable="g++" failonerror="true">
+                                            <arg value="-m32" />
+                                            <arg value="-shared" />
+                                            <arg value="-I${jdk.home}/include" />
+                                            <arg value="-I${jdk.home}/include/win32" />
+                                            <arg value="-I${includes}" />
+                                            <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
+                                            <arg value="-o${natives}/VideoCaptureInventoryWin32.dll" />
+                                            <arg value="-Wl,- -add-stdcall-alias" />
+                                            <arg value="-lole32" />
+                                            <arg value="-loleaut32" />
+                                        </exec>
+                                    </target>
+                                    -->
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>${jar.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>jar-win64</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>windows-x86_64</classifier>
+                                    <classesDirectory>${natives}</classesDirectory>
+                                    <includes>
+                                        <include>VideoCaptureInventoryWin64.dll</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                            <!--
+                            <execution>
+                                <id>jar-win32</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>windows-x86</classifier>
+                                    <classesDirectory>${natives}</classesDirectory>
+                                    <includes>
+                                        <include>VideoCaptureInventoryWin32.dll</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                            -->
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${dependency.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <!-- Unpack the headers files from the java-api jar -->
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.github.regwhitton</groupId>
+                                    <artifactId>video-capture-inventory-java-api</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${includes}</outputDirectory>
+                                    <includes>*.h</includes>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
