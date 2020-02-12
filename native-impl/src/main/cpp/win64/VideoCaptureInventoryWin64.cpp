@@ -226,6 +226,7 @@ class VideoCaptureInventory
 
             proxy->AddFormat(width, height);
         }
+        return S_OK;
     }
 
     jstring toJavaString(BSTR bstr)
