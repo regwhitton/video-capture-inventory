@@ -1,5 +1,7 @@
 # Video Capture Inventory
 
+![Build](https://github.com/regwhitton/video-capture-inventory/workflows/Build/badge.svg)
+
 Video Capture Inventory provides a Java API and native shared libraries to give an inventory of
 the video capture devices attached to the local machine and the frame sizes supported by each
 device.
