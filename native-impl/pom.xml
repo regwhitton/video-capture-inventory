@@ -100,7 +100,7 @@
                         <version>${jar.plugin.version}</version>
                         <executions>
                             <execution>
-                                <id>jar-win64</id>
+                                <id>classified-jar</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>jar</goal>
