@@ -6,7 +6,7 @@
 #include <string.h>
 #include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin64.h"
 
-#pragma comment(lib, "strmiids")
+//#pragma comment(lib, "strmiids")
 
 /**
  * Used by JNI implementations to call methods in the Java VideoCaptureInventory class.

@@ -30,6 +30,8 @@
         <antrun.plugin.version>1.8</antrun.plugin.version>
         <jar.plugin.version>3.2.0</jar.plugin.version>
         <dependency.plugin.version>3.1.1</dependency.plugin.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -65,6 +67,8 @@
                                         <mkdir dir="${natives}" />
                                         <exec executable="g++" failonerror="true">
                                             <arg value="-m64" />
+                                            <arg value="-Wall" /><!-- all-warnings -->
+                                            <arg value="-Werror" /><!-- warnings are errors -->
                                             <arg value="-shared" />
                                             <arg value="-I${jdk.home}/include" />
                                             <arg value="-I${jdk.home}/include/win32" />
@@ -76,23 +80,6 @@
                                             <arg value="-loleaut32" />
                                         </exec>
                                     </target>
-                                    <!--
-                                    <target>
-                                        <mkdir dir="${natives}" />
-                                        <exec executable="g++" failonerror="true">
-                                            <arg value="-m32" />
-                                            <arg value="-shared" />
-                                            <arg value="-I${jdk.home}/include" />
-                                            <arg value="-I${jdk.home}/include/win32" />
-                                            <arg value="-I${includes}" />
-                                            <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
-                                            <arg value="-o${natives}/VideoCaptureInventoryWin32.dll" />
-                                            <arg value="-Wl,- -add-stdcall-alias" />
-                                            <arg value="-lole32" />
-                                            <arg value="-loleaut32" />
-                                        </exec>
-                                    </target>
-                                    -->
                                 </configuration>
                                 <goals>
                                     <goal>run</goal>
@@ -118,22 +105,6 @@
                                     </includes>
                                 </configuration>
                             </execution>
-                            <!--
-                            <execution>
-                                <id>jar-win32</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <classifier>windows-x86</classifier>
-                                    <classesDirectory>${natives}</classesDirectory>
-                                    <includes>
-                                        <include>VideoCaptureInventoryWin32.dll</include>
-                                    </includes>
-                                </configuration>
-                            </execution>
-                            -->
                         </executions>
                     </plugin>
                 </plugins>
