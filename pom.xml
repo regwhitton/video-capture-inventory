@@ -43,7 +43,6 @@
             <id>windows</id>
             <modules>
                 <module>native-impl</module>
-                <module>examples/simple</module>
             </modules>
         </profile>
     </profiles>
