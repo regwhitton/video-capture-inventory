@@ -8,6 +8,7 @@ public class SimpleExample {
 
     public static void main(String[] args) throws InventoryException {
         VideoCaptureInventory vci = VideoCaptureInventory.get();
+        System.out.println("Number of cameras: " + vci.devices.size());
         for(Device d : vci.devices){
             System.out.println("Camera: " + d.name);
             for(Format f : d.formats){
