@@ -102,7 +102,7 @@
                             <execution>
                                 <id>default-jar</id>
                                 <!-- Setting to "none" stop production of default jar -->
-                                <phase>package</phase>
+                                <phase>none</phase>
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
