@@ -58,6 +58,14 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub regwhitton Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/regwhitton/video-capture-inventory</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
