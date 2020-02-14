@@ -5,46 +5,176 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.regwhitton</groupId>
-    <artifactId>video-capture-inventory-modules</artifactId>
-    <version>0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <artifactId>video-capture-inventory</artifactId>
+    <version>0.1.0</version>
+    <packaging>jar</packaging>
 
     <!--
-        In build environments, profiles will only be activated from the
-        command line using -P option.  Java-API should be built first, as it
-        also creates the C++ headers files for the native shared libraries.
-        Separate builds should then happen for the native shared libraries.
-
-        For development (with no profiles on the command line), maven will build:
-        * the Java-API,
-        * the natives for the current machine (if available),
-        * the simple example that lists the local devices.
+        During a release build profiles will be activated from the
+        command line using -P option.
     -->
     <profiles>
+        <!--
+            Release build profile for the default jar containing the Java API.
+        -->
         <profile>
-            <id>default</id>
+            <id>java-only</id>
+            <properties>
+                <java-api.jar.phase>package</java-api.jar.phase>
+                <natives.jar.phase>none</natives.jar.phase>
+                <skip.native>true</skip.native>
+            </properties>
+        </profile>
+
+        <!--
+            Release build profile for a native shared library.
+        -->
+        <profile>
+            <id>native-only</id>
+            <properties>
+                <java-api.jar.phase>none</java-api.jar.phase>
+                <natives.jar.phase>package</natives.jar.phase>
+            </properties>
+        </profile>
+
+        <!-- OS config for building and jaring native shared library -->
+        <profile>
+            <id>windows-native</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <os>
+                    <family>windows</family>
+                </os>
             </activation>
-            <modules>
-                <module>java-api</module>
-                <module>native-impl</module>
-                <module>examples/simple</module>
-                <module>examples/opencv</module>
-            </modules>
+            <properties>
+                <is.windows>true</is.windows>
+                <native.classifier>windows-x86_64</native.classifier>
+                <native.shared.library>VideoCaptureInventoryWin64.dll</native.shared.library>
+            </properties>
         </profile>
-        <profile>
-            <id>java-api</id>
-            <modules>
-                <module>java-api</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>windows</id>
-            <modules>
-                <module>native-impl</module>
-            </modules>
-        </profile>
+
     </profiles>
+
+    <properties>
+        <!--
+            JAVA_HOME points to JDK on target build machine:
+                https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
+            However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
+            to Unix style but g++ doesn't understand it.
+            So we setup jdk.home to points to JDK by assuming it is folder above JRE.
+        -->
+        <jdk.home>${java.home}/..</jdk.home>
+
+        <skip.native>false</skip.native>
+        <java-api.jar.phase>package</java-api.jar.phase>
+        <natives.jar.phase>package</natives.jar.phase>
+
+        <includes>${project.build.directory}/includes</includes>
+        <natives>${project.build.directory}/natives</natives>
+
+        <compiler.plugin.version>3.1</compiler.plugin.version>
+        <antrun.plugin.version>1.8</antrun.plugin.version>
+        <jar.plugin.version>3.2.0</jar.plugin.version>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <!--
+                While compiling java create C++ header files
+                for the native code and bundle them into the jar.
+            -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler.plugin.version}</version>
+
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint</arg>
+                        <arg>-h</arg>
+                        <arg>${includes}</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <!--
+                Compile the native shared library
+            -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${antrun.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <skip>${skip.native}</skip>
+                            <target if="is.windows">
+                                <mkdir dir="${natives}" />
+                                <exec executable="g++" failonerror="true" >
+                                    <arg value="-m64" />
+                                    <arg value="-Wall" /><!-- all-warnings -->
+                                    <arg value="-Werror" /><!-- warnings are errors -->
+                                    <arg value="-shared" />
+                                    <arg value="-I${jdk.home}/include" />
+                                    <arg value="-I${jdk.home}/include/win32" />
+                                    <arg value="-I${includes}" />
+                                    <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
+                                    <arg value="-o${natives}/${native.shared.library}" />
+                                    <arg value="-Wl,--add-stdcall-alias" />
+                                    <arg value="-lole32" />
+                                    <arg value="-loleaut32" />
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Jar java-api as main artifact and native share library as classifier.
+            -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${jar.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <!-- Setting to "none" stop production of default jar -->
+                        <phase>${java-api.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>classified-jar</id>
+                        <phase>${natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>${native.classifier}</classifier>
+                            <classesDirectory>${natives}</classesDirectory>
+                            <includes>
+                                <include>${native.shared.library}</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub regwhitton Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/regwhitton/video-capture-inventory</url>
+        </repository>
+    </distributionManagement>
 
 </project>

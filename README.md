@@ -56,3 +56,7 @@ Currently Video Capture Inventory:
 
 * [Simple](./examples/simple) - list the devices and frame size to the console.
 * [OpenCV](./examples/opencv) - use OpenCV to grab an image from every device, at every frame size.
+
+# Credits
+
+Includes NativeUtils by Adam Heinrich.  See: https://github.com/adamheinrich/native-utils
