@@ -1,6 +1,9 @@
-name: Build
+name: Build and Deploy
 
-on: [push]
+on:
+  release:
+    types:
+    - published
 
 jobs:
   build:
@@ -13,7 +16,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Build Java-API and Windows-x86_64 native
-      run: mvn -B install --file pom.xml
+    - name: Build and Deploy Java-API and Windows-x86_64 native
+      run: mvn -B install deploy --file pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
