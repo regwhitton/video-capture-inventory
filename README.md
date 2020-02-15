@@ -6,7 +6,7 @@ Video Capture Inventory provides a Java API and native shared libraries to give 
 the video capture devices attached to the local machine and the frame sizes supported by each
 device.
 
-The support list of platforms are:
+The supported platforms are:
 * 64bit Windows
 
 Not a long list, but it can only grow.
