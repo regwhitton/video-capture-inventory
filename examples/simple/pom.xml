@@ -6,10 +6,12 @@
 
     <groupId>com.github.regwhitton</groupId>
     <artifactId>video-capture-inventory-simple-example</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <properties>
+        <vci.version>0.1.0</vci.version>
+
         <exec.mainClass>com.github.regwhitton.videocaptureinventory.example.simple.SimpleExample</exec.mainClass>
 
         <exec.plugin.version>1.6.0</exec.plugin.version>
@@ -52,40 +54,20 @@
     <dependencies>
         <dependency>
             <groupId>com.github.regwhitton</groupId>
-            <artifactId>video-capture-inventory-java-api</artifactId>
-            <version>0.1-SNAPSHOT</version>
-            <!--
+            <artifactId>video-capture-inventory</artifactId>
+            <version>${vci.version}</version>
+            <classifier/>
+        </dependency>
+        <dependency>
             <groupId>com.github.regwhitton</groupId>
             <artifactId>video-capture-inventory</artifactId>
-            <version>${project.version}</version>
+            <version>${vci.version}</version>
             <classifier>${platform}</classifier>
-            -->
         </dependency>
     </dependencies>
 
     <repositories>
         <repository>
-            <!--
-                Sorry but you have to a Github account and a personal access token
-                to build against a public project on Github directly.
-                (but you can download the jars and push them into your local repo).
-
-                Your ~/.m2/settings.xml needs a server entry. See:
-                    https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line
-                    https://github.com/settings/tokens
-
-                <settings ...>
-                    ...
-                    <servers>
-                        <server>
-                            <id>github</id>
-                            <username>your_github_username</username>
-                            <password>your_github_access_token</password>
-                        </server>
-                    </servers>
-                    ...`
-                </settings>
-            -->
             <id>github</id>
             <name>GitHub regwhitton Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/regwhitton/video-capture-inventory</url>

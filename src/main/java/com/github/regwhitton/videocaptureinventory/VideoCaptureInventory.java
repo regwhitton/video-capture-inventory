@@ -14,6 +14,10 @@ public abstract class VideoCaptureInventory {
 
     /**
      * Gets an instance populated with Video Capture device information.
+     *
+     * @throws InventoryException upon failure to retrieve device information.
+     *
+     * @return the populated instance.
      */
     public static VideoCaptureInventory get() throws InventoryException {
         VideoCaptureInventory vci = newInstance();
@@ -27,24 +31,33 @@ public abstract class VideoCaptureInventory {
     /**
      * Implemented by extending class to populated the instance.
      *
-     * @returns 0 on success, or a platform dependant code on failure.
+     * @return 0 on success, or a platform dependant code on failure.
      */
     protected abstract int populate();
 
     /**
      * Gives a message about the error code and the details on how to interprit it.
+     *
+     * @param code operating system dependant error code.
+     *
+     * @return the formatted message.
      */
     protected abstract String formatErrorCodeMessage(int code);
 
     /**
      * Used by extending class to add device to inventory.
+     *
+     * @param name of the device.
      */
     protected void addDevice(String name) {
         devices.add(new Device(name));
     }
 
     /**
-     * Used by extending class to add format to last device.
+     * Used by extending class to add a format to the last added device.
+     *
+     * @param width of the frame in this format.
+     * @param height of the frame in this format.
      */
     protected void addFormat(int width, int height) {
         Format f = new Format(width, height);
@@ -58,6 +71,8 @@ public abstract class VideoCaptureInventory {
 
     /**
      * Determines the extending class for this environment.
+     *
+     * @return the extending class for use on this platform.
      */
     private static Class<?> getImpl() {
         String baseName = VideoCaptureInventory.class.getName();

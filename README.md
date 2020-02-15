@@ -45,6 +45,52 @@ You might use it like this:
         }
     }
 
+## Maven
+
+Add the follow to your pom.xml to get the Java API and only the 64bit Windows native shared library:
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.regwhitton</groupId>
+            <artifactId>video-capture-inventory</artifactId>
+            <version>0.1.0</version>
+            <classifier/>
+        </dependency>
+        <dependency>
+            <groupId>com.github.regwhitton</groupId>
+            <artifactId>video-capture-inventory</artifactId>
+            <version>0.1.0</version>
+            <classifier>windows-x86_64</classifier>
+        </dependency>
+    </dependencies>
+    ...
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub regwhitton Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/regwhitton/video-capture-inventory</url>
+        </repository>
+    </repositories>
+
+You need a Github account and a personal access token to build against Github's Maven Repo (yes even if the project is public).
+See [Creating a personal access token for the command line](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
+
+Edit your ~/.m2/settings.xml and add a server entry.
+
+    <settings ...>
+        ...
+        <servers>
+            <server>
+                <id>github</id>
+                <username>your_github_username</username>
+                <password>your_github_access_token</password>
+            </server>
+        </servers>
+        ...
+    </settings>
+
+Alternatively, you can go to the packages tab on Github, download the jars, rename then and install them into your local repo.
+
 ## You might need to know
 
 Currently Video Capture Inventory:

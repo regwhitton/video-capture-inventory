@@ -6,10 +6,11 @@
 
     <groupId>com.github.regwhitton</groupId>
     <artifactId>video-capture-inventory-opencv-example</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <properties>
+        <vci.version>0.1.0</vci.version>
         <opencv.version>4.1.2</opencv.version>
         <javacpp.version>1.5.2</javacpp.version>
 
@@ -59,7 +60,13 @@
         <dependency>
             <groupId>com.github.regwhitton</groupId>
             <artifactId>video-capture-inventory</artifactId>
-            <version>${project.version}</version>
+            <version>${vci.version}</version>
+            <classifier/>
+        </dependency>
+        <dependency>
+            <groupId>com.github.regwhitton</groupId>
+            <artifactId>video-capture-inventory</artifactId>
+            <version>${vci.version}</version>
             <classifier>${platform}</classifier>
         </dependency>
 
@@ -85,7 +92,7 @@
             <artifactId>opencv</artifactId>
             <version>${opencv.version}-${javacpp.version}</version>
             <!-- Main JAR with no classifer -->
-            <classifier></classifier>
+            <classifier/>
         </dependency>
         <dependency>
             <groupId>org.bytedeco</groupId>
