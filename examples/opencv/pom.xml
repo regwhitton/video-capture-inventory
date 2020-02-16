@@ -6,11 +6,11 @@
 
     <groupId>com.github.regwhitton</groupId>
     <artifactId>video-capture-inventory-opencv-example</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <properties>
-        <vci.version>0.1.0</vci.version>
+        <vci.version>0.1.1</vci.version>
         <opencv.version>4.1.2</opencv.version>
         <javacpp.version>1.5.2</javacpp.version>
 

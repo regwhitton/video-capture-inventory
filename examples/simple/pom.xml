@@ -6,11 +6,11 @@
 
     <groupId>com.github.regwhitton</groupId>
     <artifactId>video-capture-inventory-simple-example</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <properties>
-        <vci.version>0.1.0</vci.version>
+        <vci.version>0.1.1</vci.version>
 
         <exec.mainClass>com.github.regwhitton.videocaptureinventory.example.simple.SimpleExample</exec.mainClass>
 

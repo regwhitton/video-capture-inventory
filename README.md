@@ -53,13 +53,13 @@ Add the follow to your pom.xml to get the Java API and only the 64bit Windows na
         <dependency>
             <groupId>com.github.regwhitton</groupId>
             <artifactId>video-capture-inventory</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
             <classifier/>
         </dependency>
         <dependency>
             <groupId>com.github.regwhitton</groupId>
             <artifactId>video-capture-inventory</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
             <classifier>windows-x86_64</classifier>
         </dependency>
     </dependencies>
