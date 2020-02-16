@@ -104,6 +104,7 @@
     
     <distributionManagement>
         <repository>
+            <!-- add your Github access token to ~/.m2/settings.xml - see main README -->
             <id>github</id>
             <name>GitHub regwhitton Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/regwhitton/video-capture-inventory</url>
