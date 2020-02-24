@@ -195,6 +195,7 @@
                                 <exec executable="docker" failonerror="true" >
                                     <arg value="run" />
                                     <arg value="-v${basedir}:/workdir" />
+                                    <arg value="-v${linux.jdk.home}/include:/jdk-include" />
                                     <arg value="--rm" />
                                     <arg value="-eCROSS_TRIPLE=arm-linux-gnueabihf" />
                                     <arg value="multiarch/crossbuild" />
@@ -203,11 +204,11 @@
                                     <arg value="-Wall" />
                                     <arg value="-Werror" />
                                     <arg value="-shared" />
-                                    <arg value="-I${linux.jdk.home}/include" />
-                                    <arg value="-I${linux.jdk.home}/include/linux" />
+                                    <arg value="-I/jdk-include" />
+                                    <arg value="-I/jdk-include/linux" />
                                     <arg value="-I/workdir/target/generated-includes" />
-                                    <arg value="src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
-                                    <arg value="-otarget/natives/linux-armhf/libvidcapinv.so" />
+                                    <arg value="/workdir/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-o/workdir/target/natives/linux-armhf/libvidcapinv.so" />
                                 </exec>
                             </target>
                         </configuration>
