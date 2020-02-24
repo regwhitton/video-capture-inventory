@@ -77,12 +77,15 @@ public abstract class VideoCaptureInventory {
     private static Class<?> getImpl() {
         String baseName = VideoCaptureInventory.class.getName();
         String name = System.getProperty("os.name");
-        String arch = System.getProperty("os.arch");
 
-        if (name.startsWith("Windows") && (arch.equals("x86_64") || arch.equals("amd64"))) {
-            return forName(baseName + "Win64");
-        } else {
-            throw new UnsupportedOperationException("VideoCaptureInventory not implemented for " + name + " " + arch);
+        if (name.startsWith("Windows")) {
+            return forName(baseName + "Win");
+        }
+        else if (name.startsWith("Linux")) {
+            return forName(baseName + "Linux");
+        }
+        else {
+            throw new UnsupportedOperationException("VideoCaptureInventory not implemented for " + name);
         }
     }
 

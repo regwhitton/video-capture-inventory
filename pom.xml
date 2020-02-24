@@ -15,60 +15,79 @@
     -->
     <profiles>
         <!--
-            Release build profile for the default jar containing the Java API.
+            Release build profile for just the default jar containing the Java API.
         -->
         <profile>
             <id>java-only</id>
             <properties>
+                <win.natives.build.skip>true</win.natives.build.skip>
+                <linux.natives.build.skip>true</linux.natives.build.skip>
                 <java-api.jar.phase>package</java-api.jar.phase>
-                <natives.jar.phase>none</natives.jar.phase>
-                <skip.native>true</skip.native>
+                <win.natives.jar.phase>none</win.natives.jar.phase>
+                <linux.natives.jar.phase>none</linux.natives.jar.phase>
             </properties>
         </profile>
 
         <!--
-            Release build profile for a native shared library.
+            Release build profile to exclude the default jar containing the Java API.
         -->
         <profile>
-            <id>native-only</id>
+            <id>natives-only</id>
             <properties>
                 <java-api.jar.phase>none</java-api.jar.phase>
-                <natives.jar.phase>package</natives.jar.phase>
             </properties>
         </profile>
 
-        <!-- OS config for building and jaring native shared library -->
+        <!-- OS configs for building and jaring native shared library -->
+
         <profile>
-            <id>windows-native</id>
+            <id>windows-natives</id>
             <activation>
                 <os>
                     <family>windows</family>
                 </os>
             </activation>
             <properties>
-                <is.windows>true</is.windows>
-                <native.classifier>windows-x86_64</native.classifier>
-                <native.shared.library>VideoCaptureInventoryWin64.dll</native.shared.library>
+                <!--
+                    In the JVM, the java.home property points to the JRE not the JDK.
+                    JAVA_HOME points to JDK on target build machine:
+                        https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
+                    However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
+                    to Unix style but g++ doesn't understand it.
+                    So we setup jdk.home to points to JDK by assuming it is folder above JRE.
+                -->
+                <win.jdk.home>${java.home}/..</win.jdk.home>
+
+                <win.natives.build.skip>false</win.natives.build.skip>
+                <win.natives.jar.phase>package</win.natives.jar.phase>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>linux-natives</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+            </activation>
+            <properties>
+                <linux.jdk.home>/usr/lib/jvm/java-1.8-openjdk</linux.jdk.home>
+
+                <linux.natives.build.skip>false</linux.natives.build.skip>
+                <linux.natives.jar.phase>package</linux.natives.jar.phase>
             </properties>
         </profile>
 
     </profiles>
 
     <properties>
-        <!--
-            JAVA_HOME points to JDK on target build machine:
-                https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
-            However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
-            to Unix style but g++ doesn't understand it.
-            So we setup jdk.home to points to JDK by assuming it is folder above JRE.
-        -->
-        <jdk.home>${java.home}/..</jdk.home>
-
-        <skip.native>false</skip.native>
+        <win.natives.build.skip>true</win.natives.build.skip>
+        <linux.natives.build.skip>true</linux.natives.build.skip>
         <java-api.jar.phase>package</java-api.jar.phase>
-        <natives.jar.phase>package</natives.jar.phase>
+        <win.natives.jar.phase>none</win.natives.jar.phase>
+        <linux.natives.jar.phase>none</linux.natives.jar.phase>
 
-        <includes>${project.build.directory}/includes</includes>
+        <generated.includes>${project.build.directory}/generated-includes</generated.includes>
         <natives>${project.build.directory}/natives</natives>
 
         <compiler.plugin.version>3.1</compiler.plugin.version>
@@ -94,7 +113,7 @@
                     <compilerArgs>
                         <arg>-Xlint</arg>
                         <arg>-h</arg>
-                        <arg>${includes}</arg>
+                        <arg>${generated.includes}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -107,24 +126,88 @@
                 <version>${antrun.plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>windows-natives-build</id>
                         <phase>process-classes</phase>
                         <configuration>
-                            <skip>${skip.native}</skip>
-                            <target if="is.windows">
-                                <mkdir dir="${natives}" />
+                            <skip>${win.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/windows-x86_64" />
+                                <echo message="Compiling windows-x86_64" />
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
-                                    <arg value="-Wall" /><!-- all-warnings -->
-                                    <arg value="-Werror" /><!-- warnings are errors -->
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
                                     <arg value="-shared" />
-                                    <arg value="-I${jdk.home}/include" />
-                                    <arg value="-I${jdk.home}/include/win32" />
-                                    <arg value="-I${includes}" />
-                                    <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
-                                    <arg value="-o${natives}/${native.shared.library}" />
+                                    <arg value="-I${win.jdk.home}/include" />
+                                    <arg value="-I${win.jdk.home}/include/win32" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="-o${natives}/windows-x86_64/vidcapinv.dll" />
                                     <arg value="-Wl,--add-stdcall-alias" />
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
+                                </exec>
+                                <!-- Needs 32 bit ole.dll etc.
+                                <mkdir dir="${natives}/windows-x86" />
+                                <echo message="Compiling windows-x86" />
+                                <exec executable="g++" failonerror="true" >
+                                    <arg value="-m32" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I${win.jdk.home}/include" />
+                                    <arg value="-I${win.jdk.home}/include/win32" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="-o${natives}/windows-x86/vidcapinv.dll" />
+                                    <arg value="-Wl,- -add-stdcall-alias" />
+                                    <arg value="-lole32" />
+                                    <arg value="-loleaut32" />
+                                </exec>
+                                -->
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>linux-natives-build</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <skip>${linux.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/linux-x86_64" />
+                                <echo message="Compiling linux-x86_64" />
+                                <exec executable="g++" failonerror="true" >
+                                    <arg value="-fPIC" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I${linux.jdk.home}/include" />
+                                    <arg value="-I${linux.jdk.home}/include/linux" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-o${basedir}/target/natives/linux-x86_64/libvidcapinv.so" />
+                                </exec>
+                                <mkdir dir="${natives}/linux-armhf" />
+                                <echo message="Compiling linux-armhf" />
+                                <exec executable="docker" failonerror="true" >
+                                    <arg value="run" />
+                                    <arg value="-v${basedir}:/workdir" />
+                                    <arg value="--rm" />
+                                    <arg value="-eCROSS_TRIPLE=arm-linux-gnueabihf" />
+                                    <arg value="multiarch/crossbuild" />
+                                    <arg value="g++" />
+                                    <arg value="-fPIC" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I${linux.jdk.home}/include" />
+                                    <arg value="-I${linux.jdk.home}/include/linux" />
+                                    <arg value="-I/workdir/target/generated-includes" />
+                                    <arg value="src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-otarget/natives/linux-armhf/libvidcapinv.so" />
                                 </exec>
                             </target>
                         </configuration>
@@ -136,7 +219,7 @@
             </plugin>
 
             <!--
-                Jar java-api as main artifact and native share library as classifier.
+                Jar java-api as main artifact and each native share library with its own classifier.
             -->
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -151,17 +234,49 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>classified-jar</id>
-                        <phase>${natives.jar.phase}</phase>
+                        <id>windows-x86_64-jar</id>
+                        <phase>${win.natives.jar.phase}</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>${native.classifier}</classifier>
-                            <classesDirectory>${natives}</classesDirectory>
-                            <includes>
-                                <include>${native.shared.library}</include>
-                            </includes>
+                            <classifier>windows-x86_64</classifier>
+                            <classesDirectory>${natives}/windows-x86_64</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <!-- Not being built - see above.
+                    <execution>
+                        <id>windows-x86-jar</id>
+                        <phase>${win.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>windows-x86</classifier>
+                            <classesDirectory>${natives}/windows-x86</classesDirectory>
+                        </configuration>
+                    </execution>
+                    -->
+                    <execution>
+                        <id>linux-x86_64-jar</id>
+                        <phase>${linux.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>linux-x86_64</classifier>
+                            <classesDirectory>${natives}/linux-x86_64</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>linux-armhf-jar</id>
+                        <phase>${linux.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>linux-armhf</classifier>
+                            <classesDirectory>${natives}/linux-armhf</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>

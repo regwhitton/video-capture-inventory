@@ -4,7 +4,7 @@
 #include <strmif.h>
 #include <wchar.h>
 #include <string.h>
-#include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin64.h"
+#include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin.h"
 
 //#pragma comment(lib, "strmiids")
 
@@ -35,10 +35,9 @@ class JavaVideoCaptureInventoryProxy
         env->CallObjectMethod(this->target, this->addDeviceMethodId, name);
     }
 
-    void AddFormat(LONG width, LONG height)
+    void AddFormat(jint width, jint height)
     {
-        env->CallObjectMethod(this->target, this->addFormatMethodId,
-            (jint)width, (jint)height);
+        env->CallObjectMethod(this->target, this->addFormatMethodId, width, height);
     }
 };
 
@@ -279,7 +278,7 @@ class VideoCaptureInventory
     }
 };
 
-JNIEXPORT jint JNICALL Java_com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin64_populate
+JNIEXPORT jint JNICALL Java_com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin_populate
   (JNIEnv * env, jobject thisObject)
 {
     JavaVideoCaptureInventoryProxy proxy(env, thisObject);

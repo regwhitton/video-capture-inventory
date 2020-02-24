@@ -54,6 +54,45 @@
                 <javacpp.platform>${platform}</javacpp.platform>
             </properties>
         </profile>
+        <profile>
+            <id>linux-amd64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+                <javacpp.platform>${platform}</javacpp.platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>x86-64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+                <javacpp.platform>${platform}</javacpp.platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-armhf</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-armhf</platform>
+                <javacpp.platform>${platform}</javacpp.platform>
+            </properties>
+        </profile>
     </profiles>
 
     <dependencies>
