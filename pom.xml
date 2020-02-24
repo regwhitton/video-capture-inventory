@@ -71,7 +71,7 @@
                 </os>
             </activation>
             <properties>
-                <linux.jdk.home>/usr/lib/jvm/java-1.8-openjdk</linux.jdk.home>
+                <linux.jdk.home>${env.JAVA_HOME}</linux.jdk.home>
 
                 <linux.natives.build.skip>false</linux.natives.build.skip>
                 <linux.natives.jar.phase>package</linux.natives.jar.phase>
