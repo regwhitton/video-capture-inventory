@@ -16,10 +16,32 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+
     - name: Build and Deploy Java-API and Windows-x86_64 native
-      run: mvn -B install deploy --file pom.xml
+      run: mvn -B install deploy -Psources-javadocs --file pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Archive Java-API artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: java-api
+        path: target/video-capture-inventory-0.1.1.jar
+    - name: Archive sources artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: sources
+        path: target/video-capture-inventory-0.1.1-sources.jar
+    - name: Archive javadocs artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: javadocs
+        path: target/video-capture-inventory-0.1.1-javadocs.jar
+    - name: Archive windows-x86_64 native artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: windows-x86_64 native
+        path: target/video-capture-inventory-0.1.1-windows-x86_64.jar
 
   build-linux:
 
@@ -32,5 +54,19 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+
     - name: Build Linux natives
       run: mvn -B install deploy -Pnatives-only --file pom.xml
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Archive linux-x86_64 native artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: linux-x86_64 native
+        path: target/video-capture-inventory-0.1.1-linux-x86_64.jar
+    - name: Archive linux-armhf native artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: linux-armhf native
+        path: target/video-capture-inventory-0.1.1-linux-armhf.jar

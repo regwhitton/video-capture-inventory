@@ -14,12 +14,22 @@ jobs:
       with:
         java-version: 1.8
     - name: Build Java-API and Windows-x86_64 native
-      run: mvn -B install --file pom.xml
+      run: mvn -B install -Psources-javadocs --file pom.xml
     - name: Archive Java-API artifact
       uses: actions/upload-artifact@v1
       with:
         name: java-api
         path: target/video-capture-inventory-0.1.1.jar
+    - name: Archive sources artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: sources
+        path: target/video-capture-inventory-0.1.1-sources.jar
+    - name: Archive javadocs artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: javadocs
+        path: target/video-capture-inventory-0.1.1-javadocs.jar
     - name: Archive windows-x86_64 native artifact
       uses: actions/upload-artifact@v1
       with:
