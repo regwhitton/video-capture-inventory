@@ -79,7 +79,7 @@
         </profile>
 
         <profile>
-            <id>sources-javadocs</id>
+            <id>sources-javadoc</id>
             <build>
                 <plugins>
                     <plugin>
@@ -119,7 +119,7 @@
                         <version>${javadocs.plugin.version}</version>
                         <executions>
                             <execution>
-                                <id>attach-javadocs</id>
+                                <id>attach-javadoc</id>
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>

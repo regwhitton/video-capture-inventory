@@ -18,7 +18,7 @@ jobs:
         java-version: 1.8
 
     - name: Build and Deploy Java-API and Windows-x86_64 native
-      run: mvn -B install deploy -Psources-javadocs --file pom.xml
+      run: mvn -B install deploy -Psources-javadoc --file pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
@@ -35,8 +35,8 @@ jobs:
     - name: Archive javadocs artifact
       uses: actions/upload-artifact@v1
       with:
-        name: javadocs
-        path: target/video-capture-inventory-0.1.1-javadocs.jar
+        name: javadoc
+        path: target/video-capture-inventory-0.1.1-javadoc.jar
     - name: Archive windows-x86_64 native artifact
       uses: actions/upload-artifact@v1
       with:
