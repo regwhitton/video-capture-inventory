@@ -74,15 +74,16 @@
             </properties>
         </profile>
         <profile>
-            <id>linux-armhf</id>
+            <id>linux-armv6_vfp</id>
             <activation>
                 <os>
+                    <!-- Need better way to detect Raspberry Pi particular arch -->
                     <family>linux</family>
                     <arch>arm</arch>
                 </os>
             </activation>
             <properties>
-                <platform>linux-armhf</platform>
+                <platform>linux-armv6_vfp</platform>
             </properties>
         </profile>
     </profiles>

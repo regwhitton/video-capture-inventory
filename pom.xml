@@ -71,7 +71,7 @@
                 </os>
             </activation>
             <properties>
-                <linux.jdk.home>${env.JAVA_HOME}</linux.jdk.home>
+                <linux.jdk.home>${java.home}/..</linux.jdk.home>
 
                 <linux.natives.build.skip>false</linux.natives.build.skip>
                 <linux.natives.jar.phase>package</linux.natives.jar.phase>
@@ -244,8 +244,8 @@
                                     <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
                                     <arg value="-o${basedir}/target/natives/linux-x86_64/libvidcapinv.so" />
                                 </exec>
-                                <mkdir dir="${natives}/linux-armhf" />
-                                <echo message="Compiling linux-armhf" />
+                                <mkdir dir="${natives}/linux-armv6_vfp" />
+                                <echo message="Compiling linux-armv6_vfp" />
                                 <exec executable="docker" failonerror="true" >
                                     <arg value="run" />
                                     <arg value="-v${basedir}:/workdir" />
@@ -255,6 +255,15 @@
                                     <arg value="multiarch/crossbuild" />
                                     <arg value="g++" />
                                     <arg value="-fPIC" />
+                                    <!--
+                                        Raspberry Pi 1 Options:
+                                        Based on https://gist.github.com/tttapa/534fb671c5f6cced0e1722d3e4aec987
+                                        And: https://raspberrypi.stackexchange.com/questions/87392/pi1-armv6-how-to-disable-armhf-packages/87403#87403
+                                    -->
+                                    <arg value="-march=armv6" />
+                                    <arg value="-mcpu=vfp" />
+                                    <arg value="-mfloat-abi=hard" />
+
                                     <arg value="-Wall" />
                                     <arg value="-Werror" />
                                     <arg value="-shared" />
@@ -324,14 +333,14 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>linux-armhf-jar</id>
+                        <id>linux-armv6_vfp-jar</id>
                         <phase>${linux.natives.jar.phase}</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>linux-armhf</classifier>
-                            <classesDirectory>${natives}/linux-armhf</classesDirectory>
+                            <classifier>linux-armv6_vfp</classifier>
+                            <classesDirectory>${natives}/linux-armv6_vfp</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>

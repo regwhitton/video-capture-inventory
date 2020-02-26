@@ -6,10 +6,11 @@ Video Capture Inventory provides a Java API and native shared libraries to give 
 the video capture devices attached to the local machine and the frame sizes supported by each
 device.
 
-The provided platforms are:
-* Windows 64bit Intel and AMD
-* Linux 64bit Intel and AMD
-* Linux 32bit ARM
+| Platform         | Tested On        
+| ---------------- | ---------------- 
+| windows-x86\_64  | Dell XPS 13 9370 Windows 10
+| linux-x86\_64    |
+| linux-armv6\_vfp | _Raspberry Pi 1?_
 
 ## OpenCV and the missing device information
 

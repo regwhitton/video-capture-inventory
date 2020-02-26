@@ -84,7 +84,7 @@ class VideoCaptureInventory
         struct v4l2_capability  cap;
 
         if(ioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
-            return errno == ENOENT ? 0 : errno;
+            return errno;
         }
 
         if ((cap.device_caps & V4L2_CAP_VIDEO_CAPTURE) == 0) {
@@ -97,7 +97,7 @@ class VideoCaptureInventory
         for (inp.index = 0; ; inp.index++) {
             if (ioctl(fd, VIDIOC_ENUMINPUT, &inp) == -1) {
                 if (errno == EINVAL) {
-                    continue;
+                    break;
                 }
                 return errno;
             }
@@ -121,7 +121,7 @@ class VideoCaptureInventory
 
             if(ioctl(fd, VIDIOC_ENUM_FMT, &fmt) == -1) {
                 if (errno == EINVAL) {
-                    continue;
+                    break;
                 }
                 return errno;
             }
@@ -132,7 +132,7 @@ class VideoCaptureInventory
             for (frmsize.index = 0; ; frmsize.index++) {
                 if(ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) == -1) {
                     if (errno == EINVAL) {
-                        continue;
+                        break;
                     }
                     return errno;
                 }
