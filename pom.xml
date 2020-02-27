@@ -244,8 +244,8 @@
                                     <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
                                     <arg value="-o${basedir}/target/natives/linux-x86_64/libvidcapinv.so" />
                                 </exec>
-                                <mkdir dir="${natives}/linux-armv6_vfp" />
-                                <echo message="Compiling linux-armv6_vfp" />
+                                <mkdir dir="${natives}/linux-armhf" />
+                                <echo message="Cross-compiling linux-armhf (Raspberry Pi 1&2)" />
                                 <exec executable="docker" failonerror="true" >
                                     <arg value="run" />
                                     <arg value="-v${basedir}:/workdir" />
@@ -256,9 +256,11 @@
                                     <arg value="g++" />
                                     <arg value="-fPIC" />
                                     <!--
-                                        Raspberry Pi 1 Options:
+                                        Raspberry Pi 1 Options, should be OK for Pi 2.
                                         Based on https://gist.github.com/tttapa/534fb671c5f6cced0e1722d3e4aec987
                                         And: https://raspberrypi.stackexchange.com/questions/87392/pi1-armv6-how-to-disable-armhf-packages/87403#87403
+                                        And: https://github.com/bytedeco/javacpp-presets/issues/486
+                                        And: https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications
                                     -->
                                     <arg value="-march=armv6" />
                                     <arg value="-mcpu=vfp" />
@@ -333,14 +335,14 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>linux-armv6_vfp-jar</id>
+                        <id>linux-armhf-rpi-jar</id>
                         <phase>${linux.natives.jar.phase}</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>linux-armv6_vfp</classifier>
-                            <classesDirectory>${natives}/linux-armv6_vfp</classesDirectory>
+                            <classifier>linux-armhf</classifier>
+                            <classesDirectory>${natives}/linux-armhf</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>

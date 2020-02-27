@@ -6,12 +6,6 @@ Video Capture Inventory provides a Java API and native shared libraries to give 
 the video capture devices attached to the local machine and the frame sizes supported by each
 device.
 
-| Platform         | Tested On        
-| ---------------- | ---------------- 
-| windows-x86\_64  | Dell XPS 13 9370 Windows 10
-| linux-x86\_64    |
-| linux-armv6\_vfp | _Raspberry Pi 1?_
-
 ## OpenCV and the missing device information
 
 OpenCV is a great toolkit for manipulating video.  Among many other things it allows the developer
@@ -91,6 +85,18 @@ Edit your ~/.m2/settings.xml and add a server entry.
     </settings>
 
 Alternatively, you can go to the packages tab on Github, download the jars, rename then and install them into your local repo.
+
+### Maven Classifiers
+
+| Platform Classifier | Target                        | Tested On        
+| ------------------- | ---------------- ------------ | -----------------
+| windows-x86\_64     | Windows (64bit Intel and AMD) | Dell XPS 13 9370 Windows 10
+| linux-x86\_64       | Linux (64bit Intel and AMD)   | 
+| linux-armhf         | Raspberry Pi 1 & 2            | _Raspberry Pi 1?_
+
+These classifiers are intended to align with those given to the OpenCV native shared libraries by [Javacpp-Presets](https://github.com/bytedeco/javacpp-presets).
+
+Note the linux-armhf library targets the 32 bit Raspberry Pi (again aligning with Javacpp-Presets), so unlikely to work on Debian armhf.
 
 ## You might need to know
 

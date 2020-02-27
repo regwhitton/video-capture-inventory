@@ -81,12 +81,15 @@
             </properties>
         </profile>
         <profile>
-            <id>linux-armhf</id>
+            <id>linux-armhf-raspberrypi</id>
             <activation>
                 <os>
                     <family>linux</family>
                     <arch>arm</arch>
                 </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
             </activation>
             <properties>
                 <platform>linux-armhf</platform>
