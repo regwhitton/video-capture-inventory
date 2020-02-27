@@ -257,12 +257,14 @@
                                     <arg value="-fPIC" />
                                     <!--
                                         Raspberry Pi 1 Options, should be OK for Pi 2.
-                                        Based on https://gist.github.com/tttapa/534fb671c5f6cced0e1722d3e4aec987
+                                        Based on bitter experience
+                                        And: https://gist.github.com/tttapa/534fb671c5f6cced0e1722d3e4aec987
                                         And: https://raspberrypi.stackexchange.com/questions/87392/pi1-armv6-how-to-disable-armhf-packages/87403#87403
                                         And: https://github.com/bytedeco/javacpp-presets/issues/486
                                         And: https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications
+                                        And: https://github.com/frida/frida/issues/311
                                     -->
-                                    <arg value="-march=armv6" />
+                                    <arg value="-marm" />
                                     <arg value="-mfpu=vfp" />
                                     <arg value="-mfloat-abi=hard" />
 
