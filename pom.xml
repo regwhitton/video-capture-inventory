@@ -263,7 +263,7 @@
                                         And: https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications
                                     -->
                                     <arg value="-march=armv6" />
-                                    <arg value="-mcpu=vfp" />
+                                    <arg value="-mfpu=vfp" />
                                     <arg value="-mfloat-abi=hard" />
 
                                     <arg value="-Wall" />
