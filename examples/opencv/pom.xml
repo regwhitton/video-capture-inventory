@@ -12,6 +12,7 @@
     <properties>
         <vci.version>0.1.1</vci.version>
         <opencv.version>4.1.2</opencv.version>
+        <openblas.version>0.3.7</openblas.version>
         <javacpp.version>1.5.2</javacpp.version>
 
         <exec.mainClass>com.github.regwhitton.videocaptureinventory.example.opencv.OpenCvExample</exec.mainClass>
@@ -127,6 +128,10 @@
                     <groupId>org.bytedeco</groupId>
                     <artifactId>opencv</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.bytedeco</groupId>
+                    <artifactId>openblas</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -140,6 +145,18 @@
             <groupId>org.bytedeco</groupId>
             <artifactId>opencv</artifactId>
             <version>${opencv.version}-${javacpp.version}</version>
+            <classifier>${javacpp.platform}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas</artifactId>
+            <version>${openblas.version}-${javacpp.version}</version>
+            <classifier/>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas</artifactId>
+            <version>${openblas.version}-${javacpp.version}</version>
             <classifier>${javacpp.platform}</classifier>
         </dependency>
     </dependencies>

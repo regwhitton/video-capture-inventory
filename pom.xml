@@ -77,6 +77,34 @@
                 <linux.natives.jar.phase>package</linux.natives.jar.phase>
             </properties>
         </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>x86-64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-armhf-raspberrypi</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm</arch>
+                </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
+            </activation>
+            <properties>
+                <platform>linux-armhf</platform>
+            </properties>
+        </profile>
+
 
         <profile>
             <id>sources-javadoc</id>
@@ -231,8 +259,8 @@
                         <configuration>
                             <skip>${linux.natives.build.skip}</skip>
                             <target>
-                                <mkdir dir="${natives}/linux-x86_64" />
-                                <echo message="Compiling linux-x86_64" />
+                                <mkdir dir="${natives}/${platform}" />
+                                <echo message="Compiling ${platform}" />
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-fPIC" />
                                     <arg value="-Wall" />
@@ -242,40 +270,7 @@
                                     <arg value="-I${linux.jdk.home}/include/linux" />
                                     <arg value="-I${generated.includes}" />
                                     <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
-                                    <arg value="-o${basedir}/target/natives/linux-x86_64/libvidcapinv.so" />
-                                </exec>
-                                <mkdir dir="${natives}/linux-armhf" />
-                                <echo message="Cross-compiling linux-armhf (Raspberry Pi 1&amp;2)" />
-                                <exec executable="docker" failonerror="true" >
-                                    <arg value="run" />
-                                    <arg value="-v${basedir}:/workdir" />
-                                    <arg value="-v${linux.jdk.home}/include:/jdk-include" />
-                                    <arg value="--rm" />
-                                    <arg value="-eCROSS_TRIPLE=arm-linux-gnueabihf" />
-                                    <arg value="multiarch/crossbuild" />
-                                    <arg value="g++" />
-                                    <arg value="-fPIC" />
-                                    <!--
-                                        Raspberry Pi 1 Options, should be OK for Pi 2.
-                                        Based on bitter experience
-                                        And: https://gist.github.com/tttapa/534fb671c5f6cced0e1722d3e4aec987
-                                        And: https://raspberrypi.stackexchange.com/questions/87392/pi1-armv6-how-to-disable-armhf-packages/87403#87403
-                                        And: https://github.com/bytedeco/javacpp-presets/issues/486
-                                        And: https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications
-                                        And: https://github.com/frida/frida/issues/311
-                                    -->
-                                    <arg value="-marm" />
-                                    <arg value="-mfpu=vfp" />
-                                    <arg value="-mfloat-abi=hard" />
-
-                                    <arg value="-Wall" />
-                                    <arg value="-Werror" />
-                                    <arg value="-shared" />
-                                    <arg value="-I/jdk-include" />
-                                    <arg value="-I/jdk-include/linux" />
-                                    <arg value="-I/workdir/target/generated-includes" />
-                                    <arg value="/workdir/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
-                                    <arg value="-o/workdir/target/natives/linux-armhf/libvidcapinv.so" />
+                                    <arg value="-o${basedir}/target/natives/${platform}/libvidcapinv.so" />
                                 </exec>
                             </target>
                         </configuration>
@@ -326,25 +321,14 @@
                     </execution>
                     -->
                     <execution>
-                        <id>linux-x86_64-jar</id>
+                        <id>linux-jar</id>
                         <phase>${linux.natives.jar.phase}</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>linux-x86_64</classifier>
-                            <classesDirectory>${natives}/linux-x86_64</classesDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>linux-armhf-rpi-jar</id>
-                        <phase>${linux.natives.jar.phase}</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>linux-armhf</classifier>
-                            <classesDirectory>${natives}/linux-armhf</classesDirectory>
+                            <classifier>${platform}</classifier>
+                            <classesDirectory>${natives}/${platform}</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>
