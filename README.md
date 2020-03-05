@@ -92,11 +92,16 @@ Alternatively, you can go to the packages tab on Github, download the jars, rena
 | ------------------- | ---------------- ------------ | -----------------
 | windows-x86\_64     | Windows (64bit Intel and AMD) | Dell XPS 13 9370 Windows 10
 | linux-x86\_64       | Linux (64bit Intel and AMD)   | 
-| linux-armhf         | Raspberry Pi 1 (32bit ARM)    | Raspberry Pi 1
+| linux-armhf         | Raspberry Pi (32bit ARM)      | Raspberry Pi 1 & 3
 
 These classifiers are intended to align with those given to the OpenCV native shared libraries by [Javacpp-Presets](https://github.com/bytedeco/javacpp-presets).
 
-Note the linux-armhf library targets the 32 bit Raspberry Pi (again aligning with Javacpp-Presets), so unlikely to work on Debian armhf.
+Windows and Linux x86\_64 are available from Github's maven repo.  Other Linux can be built manually. (See Raspberry Pi below).
+
+## Example Maven Projects
+
+* [Simple](./examples/simple) - list the devices and frame size to the console.
+* [OpenCV](./examples/opencv) - use OpenCV to grab an image from every device, at every frame size.
 
 ## You might need to know
 
@@ -105,10 +110,28 @@ Currently Video Capture Inventory:
 * Ignores scanners and still image devices.
 * Ignores duplicate frame sizes for different colour depths.
 
-## Example Maven Projects
+### OpenCV and other armhf
 
-* [Simple](./examples/simple) - list the devices and frame size to the console.
-* [OpenCV](./examples/opencv) - use OpenCV to grab an image from every device, at every frame size.
+The Javacpp-Presets OpenCV linux-armhf library seems to target the Raspberry Pi, so is unlikely to work on other armhf builds of Linux as Debian.
+
+### Raspberry Pi
+
+### Builds
+
+Cross-compiling for Raspberry Pi has proved difficult. However, the sources do build and work on a Pi.  Assuming you have a Java 8+ JDK and Maven 3.6+ installed, then you can build from the root source directory with:
+
+    mvn install
+
+Then in the example source directories:
+
+    mvn verify
+
+### Pi Camera
+
+USB cameras work out-of-the-box as they are plugged in. However the Pi Camera:
+
+* needs enabling using the `rasp-config` command (Interfacing Options -> Camera)
+* has a Video4Linux driver that behaves oddly and reports incorrect frames sizes.
 
 # Credits
 
