@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020 Reg Whitton
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>

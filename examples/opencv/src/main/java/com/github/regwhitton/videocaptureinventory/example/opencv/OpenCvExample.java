@@ -1,3 +1,7 @@
+/*-
+ * Copyright 2020 Reg Whitton
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package com.github.regwhitton.videocaptureinventory.example.opencv;
 
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imwrite;

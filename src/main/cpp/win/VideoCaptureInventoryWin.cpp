@@ -1,3 +1,7 @@
+/*
+ * Copyright 2020 Reg Whitton
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include <initguid.h>
 #include <windows.h>
 #include <dshow.h>

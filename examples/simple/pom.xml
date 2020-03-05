@@ -9,6 +9,14 @@
     <version>0.1.1</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <vci.version>0.1.1</vci.version>
 

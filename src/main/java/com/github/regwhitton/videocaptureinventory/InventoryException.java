@@ -1,6 +1,9 @@
+/*-
+ * Copyright 2020 Reg Whitton
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package com.github.regwhitton.videocaptureinventory;
 
-// Turn off the warning about the failure to disable the serialization version checking.
 @SuppressWarnings("serial")
 public class InventoryException extends Exception {
     InventoryException(String message) {

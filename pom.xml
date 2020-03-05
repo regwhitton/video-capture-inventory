@@ -9,8 +9,20 @@
     <version>0.1.1</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/regwhitton/video-capture-inventory</url>
+    </scm>
+
     <!--
-        During a release build profiles will be activated from the
+        During a release some build profiles will be activated from the
         command line using -P option.
     -->
     <profiles>
@@ -335,6 +347,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>cz.adamh.utils</groupId>
+            <artifactId>native-utils</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub regwhitton Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/regwhitton/native-utils</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>

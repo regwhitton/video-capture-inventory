@@ -133,6 +133,6 @@ USB cameras work out-of-the-box as they are plugged in. However the Pi Camera:
 * needs enabling using the `rasp-config` command (Interfacing Options -> Camera)
 * has a Video4Linux driver that behaves oddly and reports incorrect frames sizes.
 
-# Credits
+## License
 
-Includes NativeUtils by Adam Heinrich.  See: https://github.com/adamheinrich/native-utils
+[Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
