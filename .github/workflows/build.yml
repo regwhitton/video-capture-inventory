@@ -13,8 +13,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+
     - name: Build Java-API and Windows-x86_64 native
       run: mvn -B install -Psources-javadoc --file pom.xml
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
     - name: Archive Java-API artifact
       uses: actions/upload-artifact@v1
       with:
@@ -47,8 +51,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+
     - name: Build Linux natives
       run: mvn -B install -Pnatives-only --file pom.xml
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Archive linux-x86_64 native artifact
       uses: actions/upload-artifact@v1
