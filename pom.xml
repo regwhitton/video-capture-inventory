@@ -22,8 +22,15 @@
     </scm>
 
     <!--
-        During a release some build profiles will be activated from the
-        command line using -P option.
+        By default: the Java API and the native shared library for the current platform is built.
+
+        During a Gitlab build, profiles will be activated from the command line using -P option.
+
+        -Pjava-only    - all native shared libraries are skipped.
+        -Pnatives-only - the Java API is skipped.
+        -Praspberrypi  - also cross-compile native shared library for Raspberry Pi using docker.
+                         Use only on Linux, but not on a Raspberry Pi.
+                         NOT CURRENTLY WORKING.
     -->
     <profiles>
         <!--
@@ -34,9 +41,11 @@
             <properties>
                 <win.natives.build.skip>true</win.natives.build.skip>
                 <linux.natives.build.skip>true</linux.natives.build.skip>
+                <rpi.natives.build.skip>true</rpi.natives.build.skip>
                 <java-api.jar.phase>package</java-api.jar.phase>
                 <win.natives.jar.phase>none</win.natives.jar.phase>
                 <linux.natives.jar.phase>none</linux.natives.jar.phase>
+                <rpi.natives.jar.phase>none</rpi.natives.jar.phase>
             </properties>
         </profile>
 
@@ -50,8 +59,20 @@
             </properties>
         </profile>
 
-        <!-- OS configs for building and jaring native shared library -->
+        <!--
+            Cross-compile shared library for Raspberry Pi (in addition to current native).
+        -->
+        <profile>
+            <id>raspberrypi</id>
+            <properties>
+                <rpi.natives.build.skip>false</rpi.natives.build.skip>
+                <rpi.natives.jar.phase>package</rpi.natives.jar.phase>
+            </properties>
+        </profile>
 
+        <!--
+            Detect the current platform and configure building/jaring native shared library for it
+        -->
         <profile>
             <id>windows-natives</id>
             <activation>
@@ -69,7 +90,6 @@
                     So we setup jdk.home to points to JDK by assuming it is folder above JRE.
                 -->
                 <win.jdk.home>${java.home}/..</win.jdk.home>
-
                 <win.natives.build.skip>false</win.natives.build.skip>
                 <win.natives.jar.phase>package</win.natives.jar.phase>
             </properties>
@@ -130,7 +150,9 @@
             </properties>
         </profile>
 
-
+        <!--
+            Create javadoc and sources (java & cpp) artifacts, if profile given on command line.
+        -->
         <profile>
             <id>sources-javadoc</id>
             <build>
@@ -149,6 +171,8 @@
                                     <sources>
                                         <source>src/main/cpp</source>
                                     </sources>
+                                    <doclint>none</doclint>
+                                    <show>public</show>
                                 </configuration>
                             </execution>
                         </executions>
@@ -187,9 +211,11 @@
     <properties>
         <win.natives.build.skip>true</win.natives.build.skip>
         <linux.natives.build.skip>true</linux.natives.build.skip>
+        <rpi.natives.build.skip>true</rpi.natives.build.skip>
         <java-api.jar.phase>package</java-api.jar.phase>
         <win.natives.jar.phase>none</win.natives.jar.phase>
         <linux.natives.jar.phase>none</linux.natives.jar.phase>
+        <rpi.natives.jar.phase>none</rpi.natives.jar.phase>
 
         <generated.includes>${project.build.directory}/generated-includes</generated.includes>
         <natives>${project.build.directory}/natives</natives>
@@ -254,24 +280,6 @@
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
                                 </exec>
-                                <!-- Needs 32 bit ole.dll etc.
-                                <mkdir dir="${natives}/windows-x86" />
-                                <echo message="Compiling windows-x86" />
-                                <exec executable="g++" failonerror="true" >
-                                    <arg value="-m32" />
-                                    <arg value="-Wall" />
-                                    <arg value="-Werror" />
-                                    <arg value="-shared" />
-                                    <arg value="-I${win.jdk.home}/include" />
-                                    <arg value="-I${win.jdk.home}/include/win32" />
-                                    <arg value="-I${generated.includes}" />
-                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
-                                    <arg value="-o${natives}/windows-x86/vidcapinv.dll" />
-                                    <arg value="-Wl,- -add-stdcall-alias" />
-                                    <arg value="-lole32" />
-                                    <arg value="-loleaut32" />
-                                </exec>
-                                -->
                             </target>
                         </configuration>
                         <goals>
@@ -303,6 +311,40 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <!--
+                    <execution>
+                        <id>rpi-natives-build</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <skip>${rpi.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/armhf" />
+                                <echo message="Compiling armhf for Raspberry Pi" />
+                                <exec executable="docker" failonerror="true" >
+                                    <arg value="run" />
+                                    <arg value="-v${basedir}:/workdir" />
+                                    <arg value="-w/workdir" />
+                                    <arg value="-v${linux.jdk.home}/include:/jdk-include" />
+                                    <arg value="- -rm" />
+                                    <arg value="balenalib/raspberrypi3" />
+                                    <arg value="g++" />
+                                    <arg value="-fPIC" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I/jdk-include" />
+                                    <arg value="-I/jdk-include/linux" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-o${basedir}/target/natives/armhf/libvidcapinv.so" />
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    -->
                 </executions>
             </plugin>
 
@@ -332,19 +374,6 @@
                             <classesDirectory>${natives}/windows-x86_64</classesDirectory>
                         </configuration>
                     </execution>
-                    <!-- Not being built - see above.
-                    <execution>
-                        <id>windows-x86-jar</id>
-                        <phase>${win.natives.jar.phase}</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>windows-x86</classifier>
-                            <classesDirectory>${natives}/windows-x86</classesDirectory>
-                        </configuration>
-                    </execution>
-                    -->
                     <execution>
                         <id>linux-jar</id>
                         <phase>${linux.natives.jar.phase}</phase>
@@ -354,6 +383,17 @@
                         <configuration>
                             <classifier>${platform}</classifier>
                             <classesDirectory>${natives}/${platform}</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>rpi-jar</id>
+                        <phase>${rpi.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>armhf</classifier>
+                            <classesDirectory>${natives}/armhf</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>

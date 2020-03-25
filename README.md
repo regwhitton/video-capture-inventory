@@ -14,15 +14,15 @@ to open any VideoCapture device, set the frame size to one supported by the devi
 You might do it like this:
 
     VideoCapture videoCapture = new VideoCapture();
+    
+    videoCapture.set(CAP_PROP_FRAME_WIDTH, 1920);
+    videoCapture.set(CAP_PROP_FRAME_HEIGHT, 1080);
+    
     int camera = 0;
     if (videoCapture.open(camera)) {
         Mat mat = new Mat();
-
-        videoCapture.set(CAP_PROP_FRAME_WIDTH, 1920);
-        videoCapture.set(CAP_PROP_FRAME_HEIGHT, 1080);
-
         videoCapture.read(mat);
-
+    
         ... do something with the image
     }
 
@@ -33,10 +33,15 @@ Video Capture Inventory aims to provide this extra information.
 You might use it like this:
 
     VideoCaptureInventory vci = VideoCaptureInventory.get();
-    for(Device d : vci.devices){
-        System.out.println("Camera: " + d.name);
-        for(Format f : d.formats){
-            System.out.println("  " + f.width + " x " + f.height);
+    for (Device d : vci.getDevices()) {
+        for (Format f : d.getFormats()) {
+            if (f instanceof DiscreteFormat) {
+                DiscreteFormat df = (DiscreteFormat) f;
+                ...
+            } else {
+                StepwiseFormat sf = (StepwiseFormat) f;
+                ...
+            }
         }
     }
 
@@ -114,9 +119,7 @@ Currently Video Capture Inventory:
 
 The Javacpp-Presets OpenCV linux-armhf library seems to target the Raspberry Pi, so is unlikely to work on other armhf builds of Linux as Debian.
 
-### Raspberry Pi
-
-### Builds
+### Raspberry Pi Builds
 
 Cross-compiling for Raspberry Pi has proved difficult. However, the sources do build and work on a Pi.  Assuming you have a Java 8+ JDK and Maven 3.6+ installed, then you can build from the root source directory with:
 
@@ -125,13 +128,6 @@ Cross-compiling for Raspberry Pi has proved difficult. However, the sources do b
 Then in the example source directories:
 
     mvn verify
-
-### Pi Camera
-
-USB cameras work out-of-the-box as they are plugged in. However the Pi Camera:
-
-* needs enabling using the `rasp-config` command (Interfacing Options -> Camera)
-* has a Video4Linux driver that behaves oddly and reports incorrect frames sizes.
 
 ## License
 

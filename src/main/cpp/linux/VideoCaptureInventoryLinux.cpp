@@ -20,7 +20,8 @@ class JavaVideoCaptureInventoryProxy
     JNIEnv *env;
     jobject target;
     jmethodID addDeviceMethodId;
-    jmethodID addFormatMethodId;
+    jmethodID addDiscreteFormatMethodId;
+    jmethodID addStepwiseFormatMethodId;
 
     public:
     JavaVideoCaptureInventoryProxy(JNIEnv *env, jobject javaVideoCaptureInventory)
@@ -29,18 +30,25 @@ class JavaVideoCaptureInventoryProxy
         this->target = javaVideoCaptureInventory;
 
         jclass targetClass = env->GetObjectClass(target);
-        this->addDeviceMethodId = env->GetMethodID(targetClass, "addDevice", "(Ljava/lang/String;)V");
-        this->addFormatMethodId = env->GetMethodID(targetClass, "addFormat", "(II)V");
+        this->addDeviceMethodId = env->GetMethodID(targetClass, "addDevice", "(ILjava/lang/String;)V");
+        this->addDiscreteFormatMethodId = env->GetMethodID(targetClass, "addFormat", "(II)V");
+        this->addStepwiseFormatMethodId = env->GetMethodID(targetClass, "addFormat", "(IIIIII)V");
     }
 
-    void AddDevice(jstring name)
+    void AddDevice(jint deviceId, jstring name)
     {
-        env->CallObjectMethod(this->target, this->addDeviceMethodId, name);
+        env->CallObjectMethod(this->target, this->addDeviceMethodId, deviceId, name);
     }
 
     void AddFormat(jint width, jint height)
     {
-        env->CallObjectMethod(this->target, this->addFormatMethodId, width, height);
+        env->CallObjectMethod(this->target, this->addDiscreteFormatMethodId, width, height);
+    }
+
+    void AddFormat(jint minWidth, jint maxWidth, jint stepWidth, jint minHeight, jint maxHeight, jint stepHeight)
+    {
+        env->CallObjectMethod(this->target, this->addStepwiseFormatMethodId,
+             minWidth, maxWidth, stepWidth, minHeight, maxHeight,  stepHeight);
     }
 };
 
@@ -65,25 +73,33 @@ class VideoCaptureInventory
     private:
     int DescribeDevices()
     {
-        int fd;
         char video_file_path[20];
 
-        for (int device = 0; ; device++) {
-            snprintf(video_file_path, sizeof video_file_path, "/dev/video%d", device);
-            if ((fd = open(video_file_path, O_RDONLY)) == -1) {
-                return errno == ENOENT ? 0 : errno;
-            }
-
-            int ret = DescribeDevice(fd);
-
-            close(fd);
+        for (int deviceId = 0; deviceId < 64 ; deviceId++) {
+            snprintf(video_file_path, sizeof video_file_path, "/dev/video%d", deviceId);
+            int ret = DescribeDevice(deviceId, video_file_path);
             if (ret > 0) {
                 return ret;
             }
         }
+        return 0;
     }
 
-    int DescribeDevice(int fd)
+    int DescribeDevice(int deviceId, const char* video_file_path)
+    {
+        int fd;
+
+        if ((fd = open(video_file_path, O_RDONLY)) == -1) {
+            return errno == ENOENT ? 0 : errno;
+        }
+
+        int ret = DescribeDevice(deviceId, fd);
+
+        close(fd);
+        return ret;
+    }
+
+    int DescribeDevice(int deviceId, int fd)
     {
         struct v4l2_capability  cap;
 
@@ -106,7 +122,7 @@ class VideoCaptureInventory
                 return errno;
             }
 
-            proxy->AddDevice(toJavaString(inp.name));
+            proxy->AddDevice(deviceId, toJavaString(inp.name));
 
             int ret = DescribeFormats(fd);
             if (ret > 0) {
@@ -140,7 +156,20 @@ class VideoCaptureInventory
                     }
                     return errno;
                 }
-                proxy->AddFormat(frmsize.discrete.width, frmsize.discrete.height);
+
+                if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+                    proxy->AddFormat(frmsize.discrete.width, frmsize.discrete.height);
+                }
+                else if (frmsize.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+                    proxy->AddFormat(
+                        frmsize.stepwise.min_width, frmsize.stepwise.max_width, frmsize.stepwise.step_width,
+                        frmsize.stepwise.min_height, frmsize.stepwise.max_height, frmsize.stepwise.step_height);
+                }
+                else {
+                    proxy->AddFormat(
+                        frmsize.stepwise.min_width, frmsize.stepwise.max_width, 1,
+                        frmsize.stepwise.min_height, frmsize.stepwise.max_height, 1);
+                }
             }
         }
         return 0;

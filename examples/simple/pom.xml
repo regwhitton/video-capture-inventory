@@ -96,6 +96,21 @@
                 <platform>linux-armhf</platform>
             </properties>
         </profile>
+        <profile>
+            <id>linux-arm64-raspberrypi</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm64</arch>
+                </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
+            </activation>
+            <properties>
+                <platform>linux-arm64</platform>
+            </properties>
+        </profile>
     </profiles>
 
     <dependencies>
