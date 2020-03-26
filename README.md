@@ -93,11 +93,11 @@ Alternatively, you can go to the packages tab on Github, download the jars, rena
 
 ### Maven Classifiers
 
-| Platform Classifier | Target                        | Tested On        
-| ------------------- | ---------------- ------------ | -----------------
-| windows-x86\_64     | Windows (64bit Intel and AMD) | Dell XPS 13 9370 Windows 10
-| linux-x86\_64       | Linux (64bit Intel and AMD)   | 
-| linux-armhf         | Raspberry Pi (32bit ARM)      | Raspberry Pi 1 & 3
+| Platform Classifier | Target                        | Tested On                    |
+| ------------------- | ----------------------------- | ---------------------------- |
+| windows-x86\_64     | Windows (64bit Intel and AMD) | Dell XPS 13 9370 Windows 10  |
+| linux-x86\_64       | Linux (64bit Intel and AMD)   |                              |
+| linux-armhf         | Raspberry Pi (32bit ARM)      | Raspberry Pi 1 & 3           |
 
 These classifiers are intended to align with those given to the OpenCV native shared libraries by [Javacpp-Presets](https://github.com/bytedeco/javacpp-presets).
 
