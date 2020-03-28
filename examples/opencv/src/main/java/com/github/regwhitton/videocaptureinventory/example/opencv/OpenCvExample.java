@@ -22,83 +22,109 @@ import com.github.regwhitton.videocaptureinventory.StepwiseFormat;
 import com.github.regwhitton.videocaptureinventory.VideoCaptureInventory;
 
 /**
- * Example showing use of <a href=
- * "http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html">OpenCV via
- * JavaCpp Presets</a>.
+ * Example that captures a frame from each camera at each frame size. On Linux
+ * stepwise devices just the smallest and largest frame sizes are used.
  * <p>
- * OpenCV always outputs a trivial warning to standard output on Windows. This
- * can't be disabled via the Java API, but can be turned off by setting the
- * environment variable OPENCV_VIDEOIO_PRIORITY_MSMF to any value.
+ * Shows the use of video-capture-inventory with OpenCV VideoCapture
+ * <a href= "http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html">via
+ * JavaCpp Presets</a>.
  * </p>
+ * <h2>Windows</h2> OpenCV always outputs a trivial warning to standard output
+ * on Windows. This can't be disabled via the Java API, but can be turned off by
+ * setting the environment variable OPENCV_VIDEOIO_PRIORITY_MSMF to any value.
  * 
- * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html
+ * <h2>Raspberry Pi/Linux</h2> Since the Raspbian-2019-07-10 release, the Linux
+ * USB camera driver is often left is a bad state on exit. Possibly a result
+ * switching camera and/or frame size quickly multiple times. See <a href=
+ * "https://raspberrypi.stackexchange.com/questions/105358/raspberry-pi4-error-while-using-2-usb-cameras-vidioc-qbuf-invalid-argument">
+ * Stack Exchange post</a>. Re-using the same VideoCapture instance seems to
+ * help. Once in bad state, errors are reported about the pixel format or device
+ * being busy. Normality might restored by:
+ * <ul>
+ * <li>rebooting</li>
+ * <li>unplugging and replugging in USB camera</li>
+ * <li>retrying (don't why, sometimes just goes away)</li>
+ * <li>using: {@code sudo rmmod uvcvideo} and
+ * {@code sudo modprobe uvcvideo}</li>
+ * </ul>
  */
-public class OpenCvExample {
+public class OpenCvExample implements AutoCloseable {
+
+    public static void main(String[] args) throws InventoryException {
+        String targetDirectory = args[0];
+
+        try (OpenCvExample oce = new OpenCvExample(targetDirectory)) {
+            oce.takeSnaps();
+        }
+    }
 
     private static final int[] IMWRITE_COMPRESSION_PARAMS = new int[] { IMWRITE_JPEG_QUALITY, 100 };
 
-    public static void main(String[] args) throws InventoryException {
-        takeSnaps(args[0]);
+    private final VideoCapture videoCapture;
+    private final String directory;
+
+    private OpenCvExample(String directory) {
+        videoCapture = new VideoCapture();
+        this.directory = directory;
     }
 
-    private static void takeSnaps(String directory) throws InventoryException {
+    public void close() {
+        videoCapture.release();
+        videoCapture.close();
+    }
+
+    private void takeSnaps() throws InventoryException {
+
         VideoCaptureInventory vci = VideoCaptureInventory.get();
+
         List<Device> devices = vci.getDevices();
         for (int d = 0; d < devices.size(); d++) {
-            Device device = devices.get(d);
-            System.out.println("DeviceId: " + device.getDeviceId() + ", Camera: " + device.getName());
-            for (Format f : device.getFormats()) {
+            Device dev = devices.get(d);
+            System.out.println("DeviceId: " + dev.getDeviceId() + ", Camera: " + dev.getName());
+
+            for (Format f : dev.getFormats()) {
                 if (f instanceof DiscreteFormat) {
                     DiscreteFormat df = (DiscreteFormat) f;
-
-                    String imageFile = directory + "/" + device.getName() + "-" + df.getWidth() + "x" + df.getHeight()
-                        + ".jpg";
-                    takeSnap(device.getDeviceId(), df.getWidth(), df.getHeight(), imageFile);
+                    takeSnap(dev.getDeviceId(), dev.getName(), df.getWidth(), df.getHeight());
                 } else {
                     StepwiseFormat sf = (StepwiseFormat) f;
-
-                    String minImageFile = directory + "/" + device.getName() + "-min-" + sf.getMinWidth() + "x" + sf
-                        .getMinHeight() + ".jpg";
-                    takeSnap(device.getDeviceId(), sf.getMinWidth(), sf.getMinHeight(), minImageFile);
-
-                    String maxImageFile = directory + "/" + device.getName() + "-max-" + sf.getMaxWidth() + "x" + sf
-                        .getMaxHeight() + ".jpg";
-                    takeSnap(device.getDeviceId(), sf.getMaxWidth(), sf.getMaxHeight(), maxImageFile);
+                    takeSnap(dev.getDeviceId(), dev.getName(), sf.getMinWidth(), sf.getMinHeight());
+                    takeSnap(dev.getDeviceId(), dev.getName(), sf.getMaxWidth(), sf.getMaxHeight());
                 }
             }
         }
     }
 
-    private static void takeSnap(int deviceId, int width, int height, String imageFile) {
-        VideoCapture videoCapture = new VideoCapture();
-        try {
-            videoCapture.set(CAP_PROP_FRAME_WIDTH, width);
-            videoCapture.set(CAP_PROP_FRAME_HEIGHT, height);
+    private void takeSnap(int deviceId, String deviceName, int width, int height) {
 
-            if (!videoCapture.open(deviceId)) {
-                System.out.println("  could not open deviceId: " + deviceId);
+        String imageFile = imageFilename(deviceName, width, height);
+
+        if (!videoCapture.open(deviceId)) {
+            System.out.println("  could not open deviceId: " + deviceId);
+            return;
+        }
+
+        videoCapture.set(CAP_PROP_FRAME_WIDTH, width);
+        videoCapture.set(CAP_PROP_FRAME_HEIGHT, height);
+
+        try (Mat mat = new Mat()) {
+            System.out.print("  " + imageFile + " ");
+
+            if (!videoCapture.read(mat)) {
+                System.out.println("- read failed");
                 return;
             }
 
-            try (Mat mat = new Mat()) {
-                System.out.print("  " + imageFile + " ");
-
-                videoCapture.read(mat);
-                if (mat.empty()) {
-                    System.out.println("- failed, blank frame grabbed");
-                    return;
-                }
-
-                if (!imwrite(imageFile, mat, IMWRITE_COMPRESSION_PARAMS)) {
-                    System.out.println("- failed to write frame");
-                    return;
-                }
-
-                System.out.println("- done");
+            if (!imwrite(imageFile, mat, IMWRITE_COMPRESSION_PARAMS)) {
+                System.out.println("- failed to write frame");
+                return;
             }
-        } finally {
-            videoCapture.release();
-            videoCapture.close();
+
+            System.out.println("- done");
         }
+    }
+
+    private String imageFilename(String deviceName, int width, int height) {
+        return directory + "/" + deviceName + "-" + width + "x" + height + ".jpg";
     }
 }
