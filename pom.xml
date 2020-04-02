@@ -9,71 +9,223 @@
     <version>0.1.1</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/regwhitton/video-capture-inventory</url>
+    </scm>
+
     <!--
-        During a release build profiles will be activated from the
-        command line using -P option.
+        By default: the Java API and the native shared library for the current platform is built.
+
+        During a Gitlab build, profiles will be activated from the command line using -P option.
+
+        -Pjava-only    - all native shared libraries are skipped.
+        -Pnatives-only - the Java API is skipped.
+        -Praspberrypi  - also cross-compile native shared library for Raspberry Pi using docker.
+                         Use only on Linux, but not on a Raspberry Pi.
+                         NOT CURRENTLY WORKING.
     -->
     <profiles>
         <!--
-            Release build profile for the default jar containing the Java API.
+            Release build profile for just the default jar containing the Java API.
         -->
         <profile>
             <id>java-only</id>
             <properties>
+                <win.natives.build.skip>true</win.natives.build.skip>
+                <linux.natives.build.skip>true</linux.natives.build.skip>
+                <rpi.natives.build.skip>true</rpi.natives.build.skip>
                 <java-api.jar.phase>package</java-api.jar.phase>
-                <natives.jar.phase>none</natives.jar.phase>
-                <skip.native>true</skip.native>
+                <win.natives.jar.phase>none</win.natives.jar.phase>
+                <linux.natives.jar.phase>none</linux.natives.jar.phase>
+                <rpi.natives.jar.phase>none</rpi.natives.jar.phase>
             </properties>
         </profile>
 
         <!--
-            Release build profile for a native shared library.
+            Release build profile to exclude the default jar containing the Java API.
         -->
         <profile>
-            <id>native-only</id>
+            <id>natives-only</id>
             <properties>
                 <java-api.jar.phase>none</java-api.jar.phase>
-                <natives.jar.phase>package</natives.jar.phase>
             </properties>
         </profile>
 
-        <!-- OS config for building and jaring native shared library -->
+        <!--
+            Cross-compile shared library for Raspberry Pi (in addition to current native).
+        -->
         <profile>
-            <id>windows-native</id>
+            <id>raspberrypi</id>
+            <properties>
+                <rpi.natives.build.skip>false</rpi.natives.build.skip>
+                <rpi.natives.jar.phase>package</rpi.natives.jar.phase>
+            </properties>
+        </profile>
+
+        <!--
+            Detect the current platform and configure building/jaring native shared library for it
+        -->
+        <profile>
+            <id>windows-natives</id>
             <activation>
                 <os>
                     <family>windows</family>
                 </os>
             </activation>
             <properties>
-                <is.windows>true</is.windows>
-                <native.classifier>windows-x86_64</native.classifier>
-                <native.shared.library>VideoCaptureInventoryWin64.dll</native.shared.library>
+                <!--
+                    In the JVM, the java.home property points to the JRE not the JDK.
+                    JAVA_HOME points to JDK on target build machine:
+                        https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
+                    However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
+                    to Unix style but g++ doesn't understand it.
+                    So we setup jdk.home to points to JDK by assuming it is folder above JRE.
+                -->
+                <win.jdk.home>${java.home}/..</win.jdk.home>
+                <win.natives.build.skip>false</win.natives.build.skip>
+                <win.natives.jar.phase>package</win.natives.jar.phase>
             </properties>
         </profile>
 
+        <profile>
+            <id>linux-natives</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+            </activation>
+            <properties>
+                <linux.jdk.home>${java.home}/..</linux.jdk.home>
+
+                <linux.natives.build.skip>false</linux.natives.build.skip>
+                <linux.natives.jar.phase>package</linux.natives.jar.phase>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>x86-64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-amd64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-armhf-raspberrypi</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm</arch>
+                </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
+            </activation>
+            <properties>
+                <platform>linux-armhf</platform>
+            </properties>
+        </profile>
+
+        <!--
+            Create javadoc and sources (java & cpp) artifacts, if profile given on command line.
+        -->
+        <profile>
+            <id>sources-javadoc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>${build-helper.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/main/cpp</source>
+                                    </sources>
+                                    <doclint>none</doclint>
+                                    <show>public</show>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${sources.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${javadocs.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadoc</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <properties>
-        <!--
-            JAVA_HOME points to JDK on target build machine:
-                https://help.github.com/en/actions/automating-your-workflow-with-github-actions/software-installed-on-github-hosted-runners#windows-server-2019
-            However, in Cygwin/MinGW environment, Maven changes JAVA_HOME
-            to Unix style but g++ doesn't understand it.
-            So we setup jdk.home to points to JDK by assuming it is folder above JRE.
-        -->
-        <jdk.home>${java.home}/..</jdk.home>
-
-        <skip.native>false</skip.native>
+        <win.natives.build.skip>true</win.natives.build.skip>
+        <linux.natives.build.skip>true</linux.natives.build.skip>
+        <rpi.natives.build.skip>true</rpi.natives.build.skip>
         <java-api.jar.phase>package</java-api.jar.phase>
-        <natives.jar.phase>package</natives.jar.phase>
+        <win.natives.jar.phase>none</win.natives.jar.phase>
+        <linux.natives.jar.phase>none</linux.natives.jar.phase>
+        <rpi.natives.jar.phase>none</rpi.natives.jar.phase>
 
-        <includes>${project.build.directory}/includes</includes>
+        <generated.includes>${project.build.directory}/generated-includes</generated.includes>
         <natives>${project.build.directory}/natives</natives>
 
         <compiler.plugin.version>3.1</compiler.plugin.version>
         <antrun.plugin.version>1.8</antrun.plugin.version>
         <jar.plugin.version>3.2.0</jar.plugin.version>
+        <build-helper.plugin.version>3.0.0</build-helper.plugin.version>
+        <sources.plugin.version>3.2.0</sources.plugin.version>
+        <javadocs.plugin.version>3.1.1</javadocs.plugin.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -94,7 +246,7 @@
                     <compilerArgs>
                         <arg>-Xlint</arg>
                         <arg>-h</arg>
-                        <arg>${includes}</arg>
+                        <arg>${generated.includes}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -107,21 +259,23 @@
                 <version>${antrun.plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>windows-natives-build</id>
                         <phase>process-classes</phase>
                         <configuration>
-                            <skip>${skip.native}</skip>
-                            <target if="is.windows">
-                                <mkdir dir="${natives}" />
+                            <skip>${win.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/windows-x86_64" />
+                                <echo message="Compiling windows-x86_64" />
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
-                                    <arg value="-Wall" /><!-- all-warnings -->
-                                    <arg value="-Werror" /><!-- warnings are errors -->
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
                                     <arg value="-shared" />
-                                    <arg value="-I${jdk.home}/include" />
-                                    <arg value="-I${jdk.home}/include/win32" />
-                                    <arg value="-I${includes}" />
-                                    <arg value="${basedir}/src/main/cpp/Win64/VideoCaptureInventoryWin64.cpp" />
-                                    <arg value="-o${natives}/${native.shared.library}" />
+                                    <arg value="-I${win.jdk.home}/include" />
+                                    <arg value="-I${win.jdk.home}/include/win32" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="-o${natives}/windows-x86_64/vidcapinv.dll" />
                                     <arg value="-Wl,--add-stdcall-alias" />
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
@@ -132,11 +286,70 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>linux-natives-build</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <skip>${linux.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/${platform}" />
+                                <echo message="Compiling ${platform}" />
+                                <exec executable="g++" failonerror="true" >
+                                    <arg value="-fPIC" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I${linux.jdk.home}/include" />
+                                    <arg value="-I${linux.jdk.home}/include/linux" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-o${basedir}/target/natives/${platform}/libvidcapinv.so" />
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <!--
+                    <execution>
+                        <id>rpi-natives-build</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <skip>${rpi.natives.build.skip}</skip>
+                            <target>
+                                <mkdir dir="${natives}/armhf" />
+                                <echo message="Compiling armhf for Raspberry Pi" />
+                                <exec executable="docker" failonerror="true" >
+                                    <arg value="run" />
+                                    <arg value="-v${basedir}:/workdir" />
+                                    <arg value="-w/workdir" />
+                                    <arg value="-v${linux.jdk.home}/include:/jdk-include" />
+                                    <arg value="- -rm" />
+                                    <arg value="balenalib/raspberrypi3" />
+                                    <arg value="g++" />
+                                    <arg value="-fPIC" />
+                                    <arg value="-Wall" />
+                                    <arg value="-Werror" />
+                                    <arg value="-shared" />
+                                    <arg value="-I/jdk-include" />
+                                    <arg value="-I/jdk-include/linux" />
+                                    <arg value="-I${generated.includes}" />
+                                    <arg value="${basedir}/src/main/cpp/linux/VideoCaptureInventoryLinux.cpp" />
+                                    <arg value="-o${basedir}/target/natives/armhf/libvidcapinv.so" />
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    -->
                 </executions>
             </plugin>
 
             <!--
-                Jar java-api as main artifact and native share library as classifier.
+                Jar java-api as main artifact and each native share library with its own classifier.
             -->
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -151,23 +364,58 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>classified-jar</id>
-                        <phase>${natives.jar.phase}</phase>
+                        <id>windows-x86_64-jar</id>
+                        <phase>${win.natives.jar.phase}</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classifier>${native.classifier}</classifier>
-                            <classesDirectory>${natives}</classesDirectory>
-                            <includes>
-                                <include>${native.shared.library}</include>
-                            </includes>
+                            <classifier>windows-x86_64</classifier>
+                            <classesDirectory>${natives}/windows-x86_64</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>linux-jar</id>
+                        <phase>${linux.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>${platform}</classifier>
+                            <classesDirectory>${natives}/${platform}</classesDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>rpi-jar</id>
+                        <phase>${rpi.natives.jar.phase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>armhf</classifier>
+                            <classesDirectory>${natives}/armhf</classesDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>cz.adamh.utils</groupId>
+            <artifactId>native-utils</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub regwhitton Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/regwhitton/native-utils</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>

@@ -1,10 +1,14 @@
+/*
+ * Copyright 2020 Reg Whitton
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include <initguid.h>
 #include <windows.h>
 #include <dshow.h>
 #include <strmif.h>
 #include <wchar.h>
 #include <string.h>
-#include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin64.h"
+#include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin.h"
 
 //#pragma comment(lib, "strmiids")
 
@@ -26,19 +30,18 @@ class JavaVideoCaptureInventoryProxy
         this->target = javaVideoCaptureInventory;
 
         jclass targetClass = env->GetObjectClass(target);
-        this->addDeviceMethodId = env->GetMethodID(targetClass, "addDevice", "(Ljava/lang/String;)V");
+        this->addDeviceMethodId = env->GetMethodID(targetClass, "addDevice", "(ILjava/lang/String;)V");
         this->addFormatMethodId = env->GetMethodID(targetClass, "addFormat", "(II)V");
     }
 
-    void AddDevice(jstring name)
+    void AddDevice(jint deviceId, jstring name)
     {
-        env->CallObjectMethod(this->target, this->addDeviceMethodId, name);
+        env->CallObjectMethod(this->target, this->addDeviceMethodId, deviceId, name);
     }
 
-    void AddFormat(LONG width, LONG height)
+    void AddFormat(jint width, jint height)
     {
-        env->CallObjectMethod(this->target, this->addFormatMethodId,
-            (jint)width, (jint)height);
+        env->CallObjectMethod(this->target, this->addFormatMethodId, width, height);
     }
 };
 
@@ -81,12 +84,14 @@ class VideoCaptureInventory
             return hr;
  
         IMoniker *pMoniker = NULL;
+        int deviceId = 0;
         while (pEnum->Next(1, &pMoniker, NULL) == S_OK)
         {
-            hr = DescribeDevice(pMoniker);
+            hr = DescribeDevice(deviceId, pMoniker);
             pMoniker->Release();
             if (FAILED(hr))
                 break;
+            deviceId++;
         }
         pEnum->Release();
         return hr;
@@ -112,14 +117,14 @@ class VideoCaptureInventory
         return hr;
     }
 
-    HRESULT DescribeDevice(IMoniker *pMoniker)
+    HRESULT DescribeDevice(int deviceId, IMoniker *pMoniker)
     {
         IPropertyBag *pPropBag;
         HRESULT hr = pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPropBag));
         if (FAILED(hr))
             return hr;
 
-        hr = DescribeDeviceFromPropertyBag(pPropBag);
+        hr = DescribeDeviceFromPropertyBag(deviceId, pPropBag);
         if(SUCCEEDED(hr)){
             hr = DescribeDeviceFormats(pMoniker);
         }
@@ -128,7 +133,7 @@ class VideoCaptureInventory
         return hr;
     }
 
-    HRESULT DescribeDeviceFromPropertyBag(IPropertyBag *pPropBag)
+    HRESULT DescribeDeviceFromPropertyBag(int deviceId, IPropertyBag *pPropBag)
     {
         VARIANT var;
         VariantInit(&var);
@@ -138,7 +143,7 @@ class VideoCaptureInventory
         HRESULT hr = pPropBag->Read(L"Description", &var, 0);
         if (SUCCEEDED(hr))
         {
-            proxy->AddDevice(toJavaString(var.bstrVal));
+            proxy->AddDevice(deviceId, toJavaString(var.bstrVal));
             VariantClear(&var);
             return hr;
         }
@@ -146,7 +151,7 @@ class VideoCaptureInventory
         hr = pPropBag->Read(L"FriendlyName", &var, 0);
         if (SUCCEEDED(hr))
         {
-            proxy->AddDevice(toJavaString(var.bstrVal));
+            proxy->AddDevice(deviceId, toJavaString(var.bstrVal));
         }
         VariantClear(&var);
         return hr;
@@ -279,7 +284,7 @@ class VideoCaptureInventory
     }
 };
 
-JNIEXPORT jint JNICALL Java_com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin64_populate
+JNIEXPORT jint JNICALL Java_com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin_populate
   (JNIEnv * env, jobject thisObject)
 {
     JavaVideoCaptureInventoryProxy proxy(env, thisObject);
