@@ -31,13 +31,17 @@ You might use it like this:
 
     VideoCaptureInventory vci = VideoCaptureInventory.get();
     for (Device d : vci.getDevices()) {
+        ... d.getDeviceId(), d.getName() ...
+
         for (Format f : d.getFormats()) {
             if (f instanceof DiscreteFormat) {
                 DiscreteFormat df = (DiscreteFormat) f;
-                ...
+                ... df.getWidth(), df.getHeight() ...
+
             } else {
                 StepwiseFormat sf = (StepwiseFormat) f;
-                ...
+                ... sf.getMinWidth(), sf.getMaxWidth(), sf.getStepWidth() ...
+                ... sf.getMinHeight(), sf.getMaxHeight(), sf.getStepHeight() ...
             }
         }
     }
