@@ -3,14 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <initguid.h>
+#include <tchar.h>
+#include <stdio.h>
 #include <windows.h>
 #include <dshow.h>
 #include <strmif.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
+#include <mfidl.h>
+#include <mfobjects.h>
+#include <mfapi.h>
 #include <wchar.h>
 #include <string.h>
 #include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin.h"
-
-//#pragma comment(lib, "strmiids")
 
 /**
  * Used by JNI implementations to call methods in the Java VideoCaptureInventory class.
@@ -60,100 +65,98 @@ class VideoCaptureInventory
 
     HRESULT Populate()
     {
-        return DescribeDevicesUsingComThread();
+        return DescribeDevices();
     }
 
     private:
-    HRESULT DescribeDevicesUsingComThread()
-    {
-        HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-        if (FAILED(hr))
-            return hr;
- 
-        hr = DescribeDevices();
-
-        CoUninitialize();
-        return hr;
-    }
-
     HRESULT DescribeDevices()
     {
-        IEnumMoniker *pEnum;
-        HRESULT hr = CreateDeviceEnumerator(&pEnum);
-        if (FAILED(hr))
-            return hr;
- 
-        IMoniker *pMoniker = NULL;
-        int deviceId = 0;
-        while (pEnum->Next(1, &pMoniker, NULL) == S_OK)
-        {
-            hr = DescribeDevice(deviceId, pMoniker);
-            pMoniker->Release();
-            if (FAILED(hr))
-                break;
-            deviceId++;
+        HRESULT hr;
+       
+        if (SUCCEEDED(hr = CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
+            hr = DescribeDevicesUsingComThread();
+            CoUninitialize();
         }
-        pEnum->Release();
         return hr;
     }
 
-    HRESULT CreateDeviceEnumerator(IEnumMoniker **ppEnum)
+    HRESULT DescribeDevicesUsingComThread()
     {
-        // Create the System Device Enumerator.
-        ICreateDevEnum *pDevEnum;
-        HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
-                                    CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
-        if (FAILED(hr))
-            return hr;
-
-        // Create an enumerator for the category.
-        hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, ppEnum, 0);
-        if (hr == S_FALSE)
-        {
-            hr = VFW_E_NOT_FOUND; // The category is empty. Treat as an error.
+        HRESULT hr;
+        IMFActivate **ppDeviceSources = NULL;
+        UINT32 deviceCount;
+    
+        if (SUCCEEDED(hr = GetEnumDeviceSources(&ppDeviceSources, &deviceCount))) {
+            for (DWORD deviceId=0; deviceId<deviceCount; deviceId++) {
+                if (FAILED(hr = DescribeDevice(deviceId, ppDeviceSources[deviceId])))
+                    break;
+            }
+            FreeEnumDeviceSources(ppDeviceSources, deviceCount);
         }
-
-        pDevEnum->Release();
         return hr;
     }
 
-    HRESULT DescribeDevice(int deviceId, IMoniker *pMoniker)
+    /**
+     * On success, FreeEnumDeviceSources() should be used to release deviceSources.
+     */
+    HRESULT GetEnumDeviceSources(IMFActivate ***pppDeviceSources, UINT32 *pcDeviceSources)
     {
-        IPropertyBag *pPropBag;
-        HRESULT hr = pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPropBag));
-        if (FAILED(hr))
+        HRESULT hr;
+        IMFAttributes *pAttributes = NULL;
+
+        if (SUCCEEDED(hr = MFCreateAttributes(&pAttributes, 1))) {
+            if (SUCCEEDED(hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                           MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID))) {
+                hr = MFEnumDeviceSources(pAttributes, pppDeviceSources, pcDeviceSources);
+            }
+            SafeRelease(&pAttributes);
+        }
+        return hr;
+    }
+
+    void FreeEnumDeviceSources(IMFActivate **ppDeviceSources, UINT32 deviceCount)
+    {
+        for (DWORD i=0; i < deviceCount; i++) {
+            SafeRelease(&ppDeviceSources[i]);
+        }
+        CoTaskMemFree(ppDeviceSources);
+    }
+
+    HRESULT DescribeDevice(DWORD deviceId, IMFActivate *pDeviceSource)
+    {
+        HRESULT hr;
+        char* pFriendlyName = NULL;
+        char* pSymbolicLink = NULL;
+
+        if (SUCCEEDED(hr = GetAttribute(pDeviceSource, MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &pFriendlyName))) {
+            proxy->AddDevice(deviceId, env->NewStringUTF(pFriendlyName));
+            free(pFriendlyName);
+
+            if (SUCCEEDED(hr = GetAttribute(pDeviceSource, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+                            &pSymbolicLink))) {
+                hr = DescribeDeviceFormats(pSymbolicLink);
+                free(pSymbolicLink);
+            }
+        }
+
+        return hr;
+    }
+
+    HRESULT DescribeDeviceFormats(char* pSymbolicLink)
+    {
+        HRESULT hr;
+        TCHAR* pDeviceInstanceId;
+
+        if (FAILED(hr = SymbolicLinkToDeviceInstanceId(pSymbolicLink, &pDeviceInstanceId))) 
             return hr;
 
-        hr = DescribeDeviceFromPropertyBag(deviceId, pPropBag);
-        if(SUCCEEDED(hr)){
+        IMoniker* pMoniker;
+        if (SUCCEEDED(hr = FindDeviceMoniker(pDeviceInstanceId, &pMoniker))) {
             hr = DescribeDeviceFormats(pMoniker);
+            pMoniker->Release();
         }
 
-        pPropBag->Release();
-        return hr;
-    }
-
-    HRESULT DescribeDeviceFromPropertyBag(int deviceId, IPropertyBag *pPropBag)
-    {
-        VARIANT var;
-        VariantInit(&var);
-
-        // Not always available - but if it is should be more detailed than FriendlyName.
-        // https://docs.microsoft.com/en-us/windows/win32/directshow/selecting-a-capture-device
-        HRESULT hr = pPropBag->Read(L"Description", &var, 0);
-        if (SUCCEEDED(hr))
-        {
-            proxy->AddDevice(deviceId, toJavaString(var.bstrVal));
-            VariantClear(&var);
-            return hr;
-        }
-
-        hr = pPropBag->Read(L"FriendlyName", &var, 0);
-        if (SUCCEEDED(hr))
-        {
-            proxy->AddDevice(deviceId, toJavaString(var.bstrVal));
-        }
-        VariantClear(&var);
+        free(pDeviceInstanceId);
         return hr;
     }
 
@@ -234,26 +237,186 @@ class VideoCaptureInventory
         return S_OK;
     }
 
-    jstring toJavaString(BSTR bstr)
+    /**
+     * On success, *ppMoniker needs to be released.
+     */
+    HRESULT FindDeviceMoniker(TCHAR* pDeviceInstanceId, IMoniker** ppMoniker)
     {
-        int len = SysStringLen(bstr);
-        // special case because a NULL BSTR is a valid zero-length BSTR,
-        // but regular string functions would balk on it
-        if (len == 0) {
-            return env->NewStringUTF("");
+        HRESULT hr;
+        IEnumMoniker *pEnum;
+
+        if (FAILED(hr = CreateDeviceMonikerEnumerator(&pEnum)))
+            return hr;
+ 
+        IMoniker *pMoniker = NULL;
+        while (pEnum->Next(1, &pMoniker, NULL) == S_OK)
+        {
+            BOOL monikerHasDevInsId;
+            if (FAILED(hr = HadDeviceInstanceId(pMoniker, pDeviceInstanceId, &monikerHasDevInsId)))
+                return hr;
+
+            if (monikerHasDevInsId) {
+                pEnum->Release();
+                *ppMoniker = pMoniker;
+                return S_OK;
+            }
+        }
+        pEnum->Release();
+        // We should be able to find the moniker, as we know this device exists.
+        return VFW_E_NOT_FOUND;
+    }
+
+    /**
+     * On success, *ppEnum needs to be released.
+     */
+    HRESULT CreateDeviceMonikerEnumerator(IEnumMoniker **ppEnum)
+    {
+        // Create the System Device Enumerator.
+        ICreateDevEnum *pDevEnum;
+        HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
+                                    CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
+
+        if (FAILED(hr))
+            return hr;
+
+        // Create an enumerator for the category.
+        hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, ppEnum, 0);
+        if (hr == S_FALSE) {
+            // The category is empty. Treat as an error.
+            hr = VFW_E_NOT_FOUND;
         }
 
-        int size_needed = WideCharToMultiByte(CP_UTF8, 0, bstr, len, NULL, 0, NULL, NULL);
-        
-        jstring rtn = 0;
-        char* buffer = (char *)malloc(size_needed + 1);
-        if(WideCharToMultiByte(CP_UTF8, 0, bstr, len, buffer, size_needed, NULL, NULL) > 0){
-            buffer[size_needed] = 0;
-            rtn = (env)->NewStringUTF(buffer);
+        pDevEnum->Release();
+        return hr;
+    }
+
+    HRESULT HadDeviceInstanceId(IMoniker* pMoniker, TCHAR* pDeviceInstanceId, BOOL* pResult)
+    {
+        HRESULT hr;
+
+        char* pDevicePath;
+        if (FAILED(hr = GetMonikerDevicePath(pMoniker, &pDevicePath)))
+            return hr;
+
+        TCHAR* pDevInsId;
+        if (FAILED(hr = SymbolicLinkToDeviceInstanceId(pDevicePath, &pDevInsId)))
+            return hr;
+
+        *pResult = _tcscmp(pDevInsId, pDeviceInstanceId) == 0;
+        return S_OK;
+    }
+
+    /**
+     * On success, *pDevicePath needs to be freed.
+     */
+    HRESULT GetMonikerDevicePath(IMoniker *pMoniker, char** ppDevicePath)
+    {
+        HRESULT hr;
+        IPropertyBag *pPropBag;
+
+        if (SUCCEEDED(hr = pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPropBag)))) {
+            hr = GetPropertyFromPropertyBag(pPropBag, L"DevicePath", ppDevicePath);
+            pPropBag->Release();
+        }
+        return hr;
+    }
+
+    /**
+     * On success, *ppValue needs to be freed.
+     */
+    HRESULT GetPropertyFromPropertyBag(IPropertyBag *pPropBag, LPCOLESTR propertyName, char** ppValue)
+    {
+        HRESULT hr;
+        VARIANT var;
+
+        VariantInit(&var);
+        hr = pPropBag->Read(propertyName, &var, 0);
+        if (SUCCEEDED(hr))
+        {
+            *ppValue = WideCharToMultiByteString(var.bstrVal);
+        }
+        VariantClear(&var);
+        return hr;
+    }
+
+    /**
+     * On success, *ppDeviceInstanceId needs to be freed.
+     */
+    HRESULT SymbolicLinkToDeviceInstanceId(char* pSymbolicLink, TCHAR** ppDeviceInstanceId)
+    {
+        HDEVINFO deviceInfoSet = SetupDiCreateDeviceInfoList(NULL, NULL);
+        if (deviceInfoSet == INVALID_HANDLE_VALUE) {
+            return E_FAIL;
         }
 
-        free(buffer);
-        return rtn;
+        HRESULT hr = SymbolicLinkToDeviceInstanceId(deviceInfoSet, pSymbolicLink, ppDeviceInstanceId);
+
+        SetupDiDestroyDeviceInfoList(deviceInfoSet);
+        return hr;
+    }
+
+    /**
+     * On success, *ppDeviceInstanceId needs to be freed.
+     */
+    HRESULT SymbolicLinkToDeviceInstanceId(HDEVINFO deviceInfoSet, char* pSymbolicLink, TCHAR** ppDeviceInstanceId)
+    {
+        if (!SetupDiOpenDeviceInterfaceA(deviceInfoSet, pSymbolicLink, 0, NULL)) {
+            return E_FAIL;
+        }
+
+        SP_DEVINFO_DATA DeviceInfoData;
+        ZeroMemory(&DeviceInfoData, sizeof(SP_DEVINFO_DATA));
+        DeviceInfoData.cbSize = sizeof (SP_DEVINFO_DATA);
+
+        // Only expecting one device in enumerator with this symbolic link.
+        if (!SetupDiEnumDeviceInfo(deviceInfoSet, 0, &DeviceInfoData)) {
+            return E_FAIL;
+        }
+
+        ULONG sizeInTChars;
+        if (CR_SUCCESS != CM_Get_Device_ID_Size(&sizeInTChars, DeviceInfoData.DevInst, 0)) {
+            return E_FAIL;
+        }
+
+        TCHAR* pDeviceInstanceId = (TCHAR*) malloc((sizeInTChars+1)*sizeof(TCHAR));
+        if (CR_SUCCESS != CM_Get_Device_ID(DeviceInfoData.DevInst, pDeviceInstanceId , sizeInTChars+1, 0)) {
+            free(pDeviceInstanceId);
+            return E_FAIL;
+        }
+        pDeviceInstanceId[sizeInTChars] = 0;
+
+        *ppDeviceInstanceId = pDeviceInstanceId;
+        return S_OK;
+    }
+                
+    /**
+     * On success, *ppValue needs to be freed.
+     */
+    HRESULT GetAttribute(IMFActivate *pDeviceSource, REFGUID guidKey, char ** ppValue)
+    {
+        LPWSTR  pWideValue = NULL;
+        UINT32  valueLength;
+
+        HRESULT hr = pDeviceSource->GetAllocatedString(guidKey, &pWideValue, &valueLength);
+        if (FAILED(hr))
+            return hr;
+
+        *ppValue = WideCharToMultiByteString(pWideValue);
+        CoTaskMemFree(pWideValue);
+        return S_OK;
+    }
+
+    /**
+     * Value returned needs to be freed.
+     */
+    char* WideCharToMultiByteString(LPWSTR  pWideCharString)
+    {
+        int len = wcslen(pWideCharString);
+        int bytesNeeded = WideCharToMultiByte(CP_UTF8, 0, pWideCharString, len, NULL, 0, NULL, NULL);
+        char * pMultiByteString = (char *)malloc(bytesNeeded + 1);
+        WideCharToMultiByte(CP_UTF8, 0, pWideCharString, len, pMultiByteString, bytesNeeded, NULL, NULL);
+        pMultiByteString[bytesNeeded] = 0;
+        return pMultiByteString;
     }
 
     /** Delete a media type structure that was allocated on the heap. */
@@ -280,6 +443,15 @@ class VideoCaptureInventory
             // pUnk should not be used.
             mt.pUnk->Release();
             mt.pUnk = NULL;
+        }
+    }
+
+    template <class T> void SafeRelease(T **ppT)
+    {
+        if (*ppT)
+        {
+            (*ppT)->Release();
+            *ppT = NULL;
         }
     }
 };

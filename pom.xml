@@ -277,8 +277,11 @@
                                     <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
                                     <arg value="-o${natives}/windows-x86_64/vidcapinv.dll" />
                                     <arg value="-Wl,--add-stdcall-alias" />
+                                    <arg value="-lsetupapi" />
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
+                                    <arg value="-lmf" />
+                                    <arg value="-lmfplat" />
                                 </exec>
                             </target>
                         </configuration>
