@@ -17,6 +17,16 @@
 #include <string.h>
 #include "com_github_regwhitton_videocaptureinventory_VideoCaptureInventoryWin.h"
 
+/*
+ * Missing or wrong in MinGW 8.1.0 g++ (as available on Github hosted runner).
+ */
+EXTERN_GUID(tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, 0xc60ac5fe,0x252a,0x478f,0xa0,0xef,0xbc,0x8f,0xa5,0xf7,0xca,0xd3);
+EXTERN_GUID(tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID, 0x8ac3587a,0x4ae7,0x42d8,0x99,0xe0,0x0a,0x60,0x13,0xee,0xf9,0x0f);
+EXTERN_GUID(tmp_MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, 0x60d0e559,0x52f8,0x4fa2,0xbb,0xce,0xac,0xdb,0x34,0xa8,0xec,0x1);
+EXTERN_GUID(tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK, 0x58f0aad8,0x22bf,0x4f8a,0xbb,0x3d,0xd2,0xc4,0x97,0x8c,0x6e,0x2f);
+
+HRESULT WINAPI MFEnumDeviceSources(IMFAttributes *pAttributes,IMFActivate ***pppSourceActivate,UINT32 *pcSourceActivate);
+
 /**
  * Used by JNI implementations to call methods in the Java VideoCaptureInventory class.
  */
@@ -105,8 +115,8 @@ class VideoCaptureInventory
         IMFAttributes *pAttributes = NULL;
 
         if (SUCCEEDED(hr = MFCreateAttributes(&pAttributes, 1))) {
-            if (SUCCEEDED(hr = pAttributes->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
-                           MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID))) {
+            if (SUCCEEDED(hr = pAttributes->SetGUID(tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                           tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID))) {
                 hr = MFEnumDeviceSources(pAttributes, pppDeviceSources, pcDeviceSources);
             }
             SafeRelease(&pAttributes);
@@ -128,11 +138,11 @@ class VideoCaptureInventory
         char* pFriendlyName = NULL;
         char* pSymbolicLink = NULL;
 
-        if (SUCCEEDED(hr = GetAttribute(pDeviceSource, MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &pFriendlyName))) {
+        if (SUCCEEDED(hr = GetAttribute(pDeviceSource, tmp_MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &pFriendlyName))) {
             proxy->AddDevice(deviceId, env->NewStringUTF(pFriendlyName));
             free(pFriendlyName);
 
-            if (SUCCEEDED(hr = GetAttribute(pDeviceSource, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+            if (SUCCEEDED(hr = GetAttribute(pDeviceSource, tmp_MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
                             &pSymbolicLink))) {
                 hr = DescribeDeviceFormats(pSymbolicLink);
                 free(pSymbolicLink);

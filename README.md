@@ -31,14 +31,20 @@ You might use it like this:
 
     VideoCaptureInventory vci = VideoCaptureInventory.get();
     for (Device d : vci.getDevices()) {
-        ... d.getDeviceId(), d.getName() ...
-
+        printf("Camera: %s\n", d.getName());
+        ...
+        if (videoCapture.open(d.getDeviceId())) {
+        ...
         for (Format f : d.getFormats()) {
             if (f instanceof DiscreteFormat) {
                 DiscreteFormat df = (DiscreteFormat) f;
-                ... df.getWidth(), df.getHeight() ...
-
+                videoCapture.set(CAP_PROP_FRAME_WIDTH, df.getWidth());
+                videoCapture.set(CAP_PROP_FRAME_HEIGHT, df.getHeight());
+                ...
+                
             } else {
+                // Linux only, where some cameras (RaspberryPi Camera module)
+                // support ranges of sizes.
                 StepwiseFormat sf = (StepwiseFormat) f;
                 ... sf.getMinWidth(), sf.getMaxWidth(), sf.getStepWidth() ...
                 ... sf.getMinHeight(), sf.getMaxHeight(), sf.getStepHeight() ...
@@ -115,6 +121,7 @@ Currently Video Capture Inventory:
 
 * Ignores scanners and still image devices.
 * Ignores duplicate frame sizes for different colour depths.
+* Requires Java 8+.
 
 ### Raspberry Pi
 
@@ -129,6 +136,15 @@ Then in the example source directories:
 The Javacpp-Presets OpenCV linux-armhf library targets the Raspberry Pi, so is unlikely to work on other armhf builds of Linux as Debian.
 
 March 2020: there are currently issues using OpenCV with USB cameras on the current version of Raspbian. See [OpenCV example](./examples/opencv/src/main/java/com/github/regwhitton/videocaptureinventory/example/opencv/OpenCvExample.java)
+
+## Changes
+
+### From 0.1.0 to 0.1.1
+* Corrected device id provided on Windows when multiple cameras attached (previously did not always match OpenCV).
+* Added support for Linux and stepwise formats (API breaking change). Tested mainly on Raspberry Pi.
+* Applied Apache License.
+* Moved copy of Adam Heinrichi's [native-utils](https://github.com/adamheinrich/native-utils) to separate [repo](https://github.com/regwhitton/native-utils).
+* Elaborated README.md
 
 ## License
 
