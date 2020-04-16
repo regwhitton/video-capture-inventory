@@ -288,7 +288,7 @@
                                 -->
                                 <exec executable="cmd.exe" failonerror="true" >
                                     <arg value="/C" />
-                                    <arg value="&quot;${VCVARS_BAT}&quot; &amp;&amp; &quot:${CL_EXE}&quot; /Wall /WX &quot;/I${win.jdk.home}/include&quot; &quot;/I${win.jdk.home}/include/win32&quot; &quot;/I${generated.includes}&quot; /D_USRDLL&quot; /D_WINDLL&quot; &quot;${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp&quot; /link /DLL &quot;/OUT:${natives}/windows-x86_64/vidcapinv.dll&quot; setupapi.lib ole32.lib oleaut32.lib mf.lib mfplat.lib strmiids.lib" />
+                                    <arg value="&quot;${VCVARS_BAT}&quot; &amp;&amp; &quot;${CL_EXE}&quot; /Wall /WX &quot;/I${win.jdk.home}/include&quot; &quot;/I${win.jdk.home}/include/win32&quot; &quot;/I${generated.includes}&quot; /D_USRDLL&quot; /D_WINDLL&quot; &quot;${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp&quot; /link /DLL &quot;/OUT:${natives}/windows-x86_64/vidcapinv.dll&quot; setupapi.lib ole32.lib oleaut32.lib mf.lib mfplat.lib strmiids.lib" />
                                     <!--
                                     <arg value="/Wall" />
                                     <arg value="/WX" />
