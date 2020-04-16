@@ -265,24 +265,6 @@
                             <skip>${win.natives.build.skip}</skip>
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
-                                <exec executable="env" failonerror="false" />
-                                <echo message="looks for vcvars" />
-                                <exec executable="ls" failonerror="false" >
-                                    <arg value="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/vsdevcmd/ext" />
-                                        C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7
-                                </exec>
-                                <echo message="looks for cl" />
-                                <exec executable="ls" failonerror="false" >
-                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/vc/Tools/MSVC/14.25.28610/bin/Hostx64/x64/" />
-                                </exec>
-                                <echo message="looks for cl2" />
-                                <exec executable="ls" failonerror="false" >
-                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/vc/Tools/MSVC/" />
-                                </exec>
-                                <echo message="looks for cl3" />
-                                <exec executable="ls" failonerror="false" >
-                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/" />
-                                </exec>
                                 <echo message="Compiling windows-x86_64" />
                                 <!-- Old version of MinGW64 g++ on Github runner has missing library
                                 <exec executable="g++" failonerror="true" >
@@ -304,7 +286,10 @@
                                     <arg value="-lstrmiids" />
                                 </exec>
                                 -->
-                                <exec executable="cl" failonerror="true" >
+                                <exec executable="cmd.exe" failonerror="true" >
+                                    <arg value="/C" />
+                                    <arg value="vcvars.bat &amp;&amp; cl /Wall /WX &quot;/I${win.jdk.home}/include&quot; &quot;/I${win.jdk.home}/include/win32&quot; &quot;/I${generated.includes}&quot; /D_USRDLL&quot; /D_WINDLL&quot; &quot;${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp&quot; /link /DLL &quot;/OUT:${natives}/windows-x86_64/vidcapinv.dll&quot; setupapi.lib ole32.lib oleaut32.lib mf.lib mfplat.lib strmiids.lib" />
+                                    <!--
                                     <arg value="/Wall" />
                                     <arg value="/WX" />
                                     <arg value="/I${win.jdk.home}/include" />
@@ -322,6 +307,7 @@
                                     <arg value="mf.lib" />
                                     <arg value="mfplat.lib" />
                                     <arg value="strmiids.lib" />
+                                    -->
                                 </exec>
                             </target>
                         </configuration>

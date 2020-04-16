@@ -15,7 +15,10 @@ jobs:
         java-version: 1.8
 
     - name: Build Java-API and Windows-x86_64 native
-      run: mvn -B install -Psources-javadoc --file pom.xml
+      run: |
+        export PATH="/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/vsdevcmd/ext:$PATH"
+        export PATH="/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/vc/Tools/MSVC/14.25.28610/bin/Hostx64/x64:$PATH"
+        mvn -B install -Psources-javadoc --file pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
