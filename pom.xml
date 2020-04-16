@@ -265,9 +265,24 @@
                             <skip>${win.natives.build.skip}</skip>
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
-                                <echo message="Compiling windows-x86_64" />
                                 <exec executable="env" failonerror="false" />
-                                <exec executable="set" failonerror="false" />
+                                <echo message="cl" />
+                                <exec executable="cl" failonerror="false" >
+                                    <arg value="/?" />
+                                </exec>
+                                <echo message="looks for vcvars" />
+                                <exec executable="ls" failonerror="false" >
+                                    <arg value="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/Tools/vsdevcmd/ext" />
+                                </exec>
+                                <echo message="looks for cl" />
+                                <exec executable="ls" failonerror="false" >
+                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/vc/Tools/MSVC/14.25.28610/bin/Hostx64/x64/" />
+                                </exec>
+                                <echo message="looks for cl2" />
+                                <exec executable="ls" failonerror="false" >
+                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/vc/Tools/MSVC/" />
+                                </exec>
+                                <echo message="Compiling windows-x86_64" />
                                 <!-- Old version of MinGW64 g++ on Github runner has missing library
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
