@@ -266,6 +266,8 @@
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
                                 <echo message="Compiling windows-x86_64" />
+                                <!-- Old version of MinGW64 g++ on Github runner has missing library
+                                -->
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
                                     <arg value="-Wall" />
@@ -276,13 +278,35 @@
                                     <arg value="-I${generated.includes}" />
                                     <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
                                     <arg value="-o${natives}/windows-x86_64/vidcapinv.dll" />
-                                    <arg value="-Wl,--add-stdcall-alias" />
+                                    <arg value="-Wl,-REMOVE-add-stdcall-alias" />
                                     <arg value="-lsetupapi" />
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
                                     <arg value="-lmf" />
                                     <arg value="-lmfplat" />
+                                    <arg value="-lstrmiids" />
                                 </exec>
+                                <!-- Attempt using MSVC
+                                <exec executable="cl" failonerror="true" >
+                                    <arg value="/Wall" />
+                                    <arg value="/WX" />
+                                    <arg value="/I${win.jdk.home}/include" />
+                                    <arg value="/I${win.jdk.home}/include/win32" />
+                                    <arg value="/I${generated.includes}" />
+                                    <arg value="/D_USRDLL" />
+                                    <arg value="/D_WINDLL" />
+                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="/link" />
+                                    <arg value="/DLL" />
+                                    <arg value="/OUT:${natives}/windows-x86_64/vidcapinv.dll" />
+                                    <arg value="setupapi.lib" />
+                                    <arg value="ole32.lib" />
+                                    <arg value="oleaut32.lib" />
+                                    <arg value="mf.lib" />
+                                    <arg value="mfplat.lib" />
+                                    <arg value="strmiids.lib" />
+                                </exec>
+                                -->
                             </target>
                         </configuration>
                         <goals>
