@@ -268,15 +268,20 @@
                                 <exec executable="env" failonerror="false" />
                                 <echo message="looks for vcvars" />
                                 <exec executable="ls" failonerror="false" >
-                                    <arg value="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/Tools/vsdevcmd/ext" />
+                                    <arg value="C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/Common7/Tools/vsdevcmd/ext" />
+                                        C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7
                                 </exec>
                                 <echo message="looks for cl" />
                                 <exec executable="ls" failonerror="false" >
-                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/vc/Tools/MSVC/14.25.28610/bin/Hostx64/x64/" />
+                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/vc/Tools/MSVC/14.25.28610/bin/Hostx64/x64/" />
                                 </exec>
                                 <echo message="looks for cl2" />
                                 <exec executable="ls" failonerror="false" >
-                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/vc/Tools/MSVC/" />
+                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/vc/Tools/MSVC/" />
+                                </exec>
+                                <echo message="looks for cl3" />
+                                <exec executable="ls" failonerror="false" >
+                                    <arg value="c:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/" />
                                 </exec>
                                 <echo message="Compiling windows-x86_64" />
                                 <!-- Old version of MinGW64 g++ on Github runner has missing library
