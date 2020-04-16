@@ -266,10 +266,6 @@
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
                                 <exec executable="env" failonerror="false" />
-                                <echo message="cl" />
-                                <exec executable="cl" failonerror="false" >
-                                    <arg value="/?" />
-                                </exec>
                                 <echo message="looks for vcvars" />
                                 <exec executable="ls" failonerror="false" >
                                     <arg value="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/Tools/vsdevcmd/ext" />
