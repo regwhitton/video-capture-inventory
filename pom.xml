@@ -286,12 +286,22 @@
                                     <arg value="-lstrmiids" />
                                 </exec>
                                 -->
-                                <exec executable="cmd.exe" failonerror="true" >
-                                    <arg value="/C" />
-                                    <arg value="&quot;${VCVARS_BAT}&quot; &amp;&amp; &quot;${CL_EXE}&quot; /Wall /WX &quot;/I${win.jdk.home}/include&quot; &quot;/I${win.jdk.home}/include/win32&quot; &quot;/I${generated.includes}&quot; /D_USRDLL&quot; /D_WINDLL&quot; &quot;${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp&quot; /link /DLL &quot;/OUT:${natives}/windows-x86_64/vidcapinv.dll&quot; setupapi.lib ole32.lib oleaut32.lib mf.lib mfplat.lib strmiids.lib" />
-                                    <!--
+                                <!--
+                                    Switching to hard to find MSVC on Gitlab runner.
+                                    To build locally - install "Build Tools for Visual Studio 2019"
+                                    from https://visualstudio.microsoft.com/downloads
+                                    And set up MSVC, INCLUDE, LIB and LIBPATH environment vars (in bash):
+
+                                    export MSVC="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.25.28610"
+                                    WINKIT="C:/Program Files (x86)/Windows Kits/10"
+                                    WINKITREL="10.0.18362.0"
+                                    WININC="$WINKIT/include/$WINKITREL"
+                                    export INCLUDE="$MSVC/include;$WININC/ucrt;$WININC/shared;$WININC/um;$WININC/winrt;$WININC/cppwinrt"
+                                    export LIB="$MSVC/lib/x64;$WINKIT/lib/$WINKITREL/ucrt/x64;$WINKIT/lib/$WINKITREL/um/x64"
+                                    export LIBPATH="$MSVC/lib/x64"
+                                -->
+                                <exec executable="${env.MSVC}/bin/HostX64/x64/cl" failonerror="true" >
                                     <arg value="/Wall" />
-                                    <arg value="/WX" />
                                     <arg value="/I${win.jdk.home}/include" />
                                     <arg value="/I${win.jdk.home}/include/win32" />
                                     <arg value="/I${generated.includes}" />
@@ -307,7 +317,6 @@
                                     <arg value="mf.lib" />
                                     <arg value="mfplat.lib" />
                                     <arg value="strmiids.lib" />
-                                    -->
                                 </exec>
                             </target>
                         </configuration>
