@@ -266,7 +266,7 @@
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
                                 <echo message="Compiling windows-x86_64" />
-                                <!-- Old version of MinGW64 g++ on Github runner has missing library
+                                <!-- Old version of MinGW64 g++ on Github runner has something missing.
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
                                     <arg value="-Wall" />
@@ -308,6 +308,7 @@
                                     <arg value="/D_USRDLL" />
                                     <arg value="/D_WINDLL" />
                                     <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="/Fo${natives}/windows-x86_64/VideoCaptureInventoryWin.obj" />
                                     <arg value="/link" />
                                     <arg value="/DLL" />
                                     <arg value="/OUT:${natives}/windows-x86_64/vidcapinv.dll" />
