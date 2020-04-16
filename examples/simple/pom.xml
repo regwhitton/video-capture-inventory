@@ -6,11 +6,19 @@
 
     <groupId>com.github.regwhitton</groupId>
     <artifactId>video-capture-inventory-simple-example</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
     <properties>
-        <vci.version>0.1.0</vci.version>
+        <vci.version>0.1.1</vci.version>
 
         <exec.mainClass>com.github.regwhitton.videocaptureinventory.example.simple.SimpleExample</exec.mainClass>
 
@@ -47,6 +55,60 @@
             </activation>
             <properties>
                 <platform>windows-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-amd64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>x86-64</arch>
+                </os>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-armhf-raspberrypi</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm</arch>
+                </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
+            </activation>
+            <properties>
+                <platform>linux-armhf</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux-arm64-raspberrypi</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                    <arch>arm64</arch>
+                </os>
+                <file>
+                    <exists>/etc/rpi-issue</exists>
+                </file>
+            </activation>
+            <properties>
+                <platform>linux-arm64</platform>
             </properties>
         </profile>
     </profiles>
