@@ -266,6 +266,7 @@
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
                                 <echo message="Compiling windows-x86_64" />
+                                <!-- Old version of MinGW64 g++ on Github runner has something missing.
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
                                     <arg value="-Wall" />
@@ -276,9 +277,47 @@
                                     <arg value="-I${generated.includes}" />
                                     <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
                                     <arg value="-o${natives}/windows-x86_64/vidcapinv.dll" />
-                                    <arg value="-Wl,--add-stdcall-alias" />
+                                    <arg value="-Wl,-REMOVE-add-stdcall-alias" />
+                                    <arg value="-lsetupapi" />
                                     <arg value="-lole32" />
                                     <arg value="-loleaut32" />
+                                    <arg value="-lmf" />
+                                    <arg value="-lmfplat" />
+                                    <arg value="-lstrmiids" />
+                                </exec>
+                                -->
+                                <!--
+                                    Switching to hard to find MSVC on Gitlab runner.
+                                    To build locally - install "Build Tools for Visual Studio 2019"
+                                    from https://visualstudio.microsoft.com/downloads
+                                    And set up MSVC, INCLUDE, LIB and LIBPATH environment vars (in bash):
+
+                                    export MSVC="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.25.28610"
+                                    WINKIT="C:/Program Files (x86)/Windows Kits/10"
+                                    WINKITREL="10.0.18362.0"
+                                    WININC="$WINKIT/include/$WINKITREL"
+                                    export INCLUDE="$MSVC/include;$WININC/ucrt;$WININC/shared;$WININC/um;$WININC/winrt;$WININC/cppwinrt"
+                                    export LIB="$MSVC/lib/x64;$WINKIT/lib/$WINKITREL/ucrt/x64;$WINKIT/lib/$WINKITREL/um/x64"
+                                    export LIBPATH="$MSVC/lib/x64"
+                                -->
+                                <exec executable="${env.MSVC}/bin/HostX64/x64/cl" failonerror="true" >
+                                    <arg value="/Wall" />
+                                    <arg value="/I${win.jdk.home}/include" />
+                                    <arg value="/I${win.jdk.home}/include/win32" />
+                                    <arg value="/I${generated.includes}" />
+                                    <arg value="/D_USRDLL" />
+                                    <arg value="/D_WINDLL" />
+                                    <arg value="${basedir}/src/main/cpp/Win/VideoCaptureInventoryWin.cpp" />
+                                    <arg value="/Fo${natives}/windows-x86_64/VideoCaptureInventoryWin.obj" />
+                                    <arg value="/link" />
+                                    <arg value="/DLL" />
+                                    <arg value="/OUT:${natives}/windows-x86_64/vidcapinv.dll" />
+                                    <arg value="setupapi.lib" />
+                                    <arg value="ole32.lib" />
+                                    <arg value="oleaut32.lib" />
+                                    <arg value="mf.lib" />
+                                    <arg value="mfplat.lib" />
+                                    <arg value="strmiids.lib" />
                                 </exec>
                             </target>
                         </configuration>

@@ -18,6 +18,11 @@ jobs:
       run: mvn -B install -Psources-javadoc --file pom.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        MSVC: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.25.28610
+        INCLUDE: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.25.28610/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um;C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/winrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/cppwinrt
+        LIB: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.25.28610/lib/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.18362.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/lib/10.0.18362.0/um/x64
+        LIBPATH: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.25.28610/lib/x64
+
 
     - name: Archive Java-API artifact
       uses: actions/upload-artifact@v1
