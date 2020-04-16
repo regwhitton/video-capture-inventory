@@ -266,8 +266,9 @@
                             <target>
                                 <mkdir dir="${natives}/windows-x86_64" />
                                 <echo message="Compiling windows-x86_64" />
+                                <exec executable="env" failonerror="false" />
+                                <exec executable="set" failonerror="false" />
                                 <!-- Old version of MinGW64 g++ on Github runner has missing library
-                                -->
                                 <exec executable="g++" failonerror="true" >
                                     <arg value="-m64" />
                                     <arg value="-Wall" />
@@ -286,7 +287,7 @@
                                     <arg value="-lmfplat" />
                                     <arg value="-lstrmiids" />
                                 </exec>
-                                <!-- Attempt using MSVC
+                                -->
                                 <exec executable="cl" failonerror="true" >
                                     <arg value="/Wall" />
                                     <arg value="/WX" />
@@ -306,7 +307,6 @@
                                     <arg value="mfplat.lib" />
                                     <arg value="strmiids.lib" />
                                 </exec>
-                                -->
                             </target>
                         </configuration>
                         <goals>
